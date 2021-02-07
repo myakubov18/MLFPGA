@@ -21,7 +21,7 @@ func main() {
 	// 100 hidden nodes - an arbitrary number
 	// 10 outputs - digits 0 to 9
 	// 0.1 is the learning rate
-	net := CreateNetwork(784, 100, 10, 0.0005);
+	net := CreateNetwork(784, 100, 10, 1);
 
 	mnist := flag.String("mnist", "", "Either train or predict to evaluate neural network");
 	file := flag.String("file", "", "File name of 28 x 28 PNG file to evaluate");
@@ -64,20 +64,22 @@ func mnistTrain(net *Network) {
 				break;
 			}
 
-			inputs := make([]float64, net.inputs);
+			inputs := make([]int, net.inputs);
 			for i := range inputs {
-				x, _ := strconv.ParseFloat(record[i], 64);
-				inputs[i] = (x / 255.0 * 9.99) + 0.01;
+				inputs[i], _ = strconv.Atoi(record[i]);
+				//inputs[i] = (x / 255.0 * 9.99) + 0.01;
 				//inputs[i] = x + 1
 			}
 			//fmt.Println("inputs: ", inputs);
 
-			targets := make([]float64, 10);
+			targets := make([]int, net.outputs);
 			for i := range targets {
-				targets[i] = 0.01;
+				//targets[i] = 0.01;
+				targets[i] = 1;
+
 			}
 			x, _ := strconv.Atoi(record[0]);
-			targets[x] = 9.99;
+			targets[x] = 255;
 			//fmt.Println("Hidden Weights: ", net.hiddenWeights.At(0,500), "\n");
 			net.Train(inputs, targets);
 			//fmt.Println("Hidden Weights: ", net.hiddenWeights.At(0,500), "\n");
@@ -104,20 +106,22 @@ func mnistPredict(net *Network) {
 		if err == io.EOF {
 			break;
 		}
-		inputs := make([]float64, net.inputs);
+		inputs := make([]int, net.inputs);
 		for i := range inputs {
 			if i == 0 {
-				inputs[i] = 0.01;
+				inputs[i] = 1;
 			}
-			x, _ := strconv.ParseFloat(record[i], 64);
-			inputs[i] = (x / 255.0 * 9.99) + 0.01;
+			inputs[i], _ = strconv.Atoi(record[i]);
+			//inputs[i] = (x / 255.0 * 9.99) + 0.01;
 		}
 		//fmt.Println("inputs: ", inputs);
 		outputs := net.Predict(inputs);
 		//fmt.Println("outputs: ", outputs)
 		best := 0;
-		highest := 0.0;
+		highest := 0;
 		for i := 0; i < net.outputs; i++ {
+			fmt.Println("%T\n", outputs);
+			//fmt.Println(type());
 			if outputs.At(i, 0) > highest {
 				best = i;
 				highest = outputs.At(i, 0);

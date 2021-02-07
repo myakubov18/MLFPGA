@@ -20,28 +20,28 @@ type Network struct {
 	outputs       int;
 	hiddenWeights *mat.Dense;
 	outputWeights *mat.Dense;
-	learningRate  float64;
+	learningRate  int;
 }
 
 // CreateNetwork creates a neural network with random weights
-func CreateNetwork(input, hidden, output int, rate float64) (net Network) {
+func CreateNetwork(input, hidden, output int, rate int) (net Network) {
 	net = Network{
 		inputs:       input,
 		hiddens:      hidden,
 		outputs:      output,
 		learningRate: rate,
 	};
-	net.hiddenWeights = mat.NewDense(net.hiddens, net.inputs, randomArray((net.inputs)*(net.hiddens), float64(net.inputs)));
+	net.hiddenWeights = mat.NewDense(net.hiddens, net.inputs, randomArray((net.inputs)*(net.hiddens), int(net.inputs)));
 	//fmt.Println("Initial Hidden Weights: ", net.hiddenWeights);
 	//fmt.Println("\n\n");
-	net.outputWeights = mat.NewDense(net.outputs, net.hiddens, randomArray((net.hiddens)*(net.outputs), float64(net.hiddens)));
+	net.outputWeights = mat.NewDense(net.outputs, net.hiddens, randomArray((net.hiddens)*(net.outputs), int(net.hiddens)));
 	//fmt.Println("Initial Output Weights: ", net.outputWeights);
 	//fmt.Println("\n\n");
 	return;
 }
 
 // Train the neural network
-func (net *Network) Train(inputData []float64, targetData []float64) {
+func (net *Network) Train(inputData []int, targetData []int) {
 	// feedforward
 	var inputs *mat.Dense;
 	var hiddenInputs mat.Matrix;
@@ -53,7 +53,7 @@ func (net *Network) Train(inputData []float64, targetData []float64) {
 
 	inputs = mat.NewDense(len(inputData), 1, inputData);
 
-	hiddenInputs = scale(0.1, dot(net.hiddenWeights, inputs));
+	hiddenInputs = scale(1, dot(net.hiddenWeights, inputs));
 	hiddenOutputs = apply(sigmoid, hiddenInputs);
 
 	finalInputs = scale(1, dot(net.outputWeights, hiddenOutputs));
@@ -77,7 +77,7 @@ func (net *Network) Train(inputData []float64, targetData []float64) {
 }
 
 // Predict uses the neural network to predict the value given input data
-func (net Network) Predict(inputData []float64) mat.Matrix {
+func (net Network) Predict(inputData []int) mat.Matrix {
 	// feedforward
 	var inputs *mat.Dense;
 	var hiddenInputs mat.Matrix;
@@ -88,7 +88,7 @@ func (net Network) Predict(inputData []float64) mat.Matrix {
 	inputs = mat.NewDense(len(inputData), 1, inputData);
 	//biasedInputs := addBiasNodeTo(inputs, 1);
 	//fmt.Println("Inputs: ", inputs);
-	hiddenInputs = scale(0.1, dot(net.hiddenWeights, inputs));
+	hiddenInputs = scale(1, dot(net.hiddenWeights, inputs));
 	//fmt.Println("hiddenInputs: ", hiddenInputs);
 	hiddenOutputs = apply(sigmoid, hiddenInputs);
 	//fmt.Println("hiddenOutputs: ", hiddenOutputs);
@@ -102,11 +102,15 @@ func (net Network) Predict(inputData []float64) mat.Matrix {
 //REPLACED SIGMOID WITH RELU THIS IS ACTUALLY RELU WE WERE JUST LAZY
 
 
-func sigmoid(r, c int, z float64) float64{
-    return math.Max(z, 0); //simple ReLU activation function
+func sigmoid(r, c int, z int) int{
+    if z > 0 {
+        return z;
+    }else{
+        return 0;
+    } //simple ReLU activation function
 }
 
-func relu2(r, c int, z float64) float64{
+func relu2(r, c int, z int) int{
     if z > 0 {
         return 1;
     }else{
@@ -141,7 +145,7 @@ func sigmoidPrime(m mat.Matrix) mat.Matrix {
 // Helper functions to allow easier use of Gonum
 //
 
-func batchNorm(m mat.Matrix) mat.Matrix{
+/*func batchNorm(m mat.Matrix) mat.Matrix{
 	bias := 0.01;
 	avg, stDev := getStats(m);
 	n := addScalar(-1*avg, m);
@@ -160,7 +164,7 @@ func getStats(m mat.Matrix) (avg, stDev float64){
 	//n = subtract(m, n);
 	stDev = mat.Sum(subtract(m, n))/float64(r*c);
 	return avg, stDev;
-}
+}*/
 
 func dot(m, n mat.Matrix) mat.Matrix {
 	r, _ := m.Dims();
@@ -174,14 +178,14 @@ func dot(m, n mat.Matrix) mat.Matrix {
 	return -1*v
 }*/
 
-func apply(fn func(i, j int, v float64) float64, m mat.Matrix) mat.Matrix {
+func apply(fn func(i, j int, v int) int, m mat.Matrix) mat.Matrix {
 	r, c := m.Dims();
 	o := mat.NewDense(r, c, nil);
 	o.Apply(fn, m);
 	return o;
 }
 
-func scale(s float64, m mat.Matrix) mat.Matrix {
+func scale(s int, m mat.Matrix) mat.Matrix {
 	r, c := m.Dims();
 	o := mat.NewDense(r, c, nil);
 	o.Scale(s, m);
@@ -202,9 +206,9 @@ func add(m, n mat.Matrix) mat.Matrix {
 	return o;
 }
 
-func addScalar(i float64, m mat.Matrix) mat.Matrix {
+func addScalar(i int, m mat.Matrix) mat.Matrix {
 	r, c := m.Dims();
-	a := make([]float64, r*c);
+	a := make([]int, r*c);
 	for x := 0; x < r*c; x++ {
 		a[x] = i;
 	}
@@ -220,13 +224,13 @@ func subtract(m, n mat.Matrix) mat.Matrix {
 }
 
 // randomly generate a float64 array
-func randomArray(size int, v float64) (data []float64) {
+func randomArray(size int, v int) (data []int) {
 	dist := distuv.Uniform{
 		Min: 0 / math.Sqrt(v),
 		Max: 1 / math.Sqrt(v),
 	};
 
-	data = make([]float64, size);
+	data = make([]int, size);
 	for i := 0; i < size; i++ {
 		// data[i] = rand.NormFloat64() * math.Pow(v, -0.5)
 		data[i] = dist.Rand();
