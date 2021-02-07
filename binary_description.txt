@@ -1,0 +1,1 @@
+We will be looking into using a binary neural network.
