@@ -1,4 +1,5 @@
 package main
+import ("fmt")
 
 type Error struct{ string }
 
@@ -67,22 +68,63 @@ func (m *Matrix) Sub(a, b *Matrix) {
 	}
 }
 // As long as a or b is not m, this works fine
-func (m *Matrix) Product(a, b *Matrix){
+func Product(a, b *Matrix) *Matrix{
 	ar, ac := a.Dims()
 	br, bc := b.Dims()
 
 	if ac != br {
 		panic(ErrShape)
 	}
+	newData := make([][]int, ar);
+	for i := range newData{
+		newData[i] = make([]int, bc)
+	}
+	m := NewMatrix(ar,bc,newData)
 	for i := 0; i < ar; i++ {
 		for j := 0; j < bc; j++ {
 			var sum int = 0
 			for k := 0; k < ac; k++ {
-				sum += a.data[i][k]*b.data[k][j]
+				sum += a.At(i,k)*b.At(k,j)
 			}
 			m.set(i, j, sum)
 		}
 	}
+	return m;
+}
+
+func (m *Matrix) T() *Matrix{
+	var newCol, newRow int = m.Dims();
+	newData := make([][]int, newRow);
+	for i := range newData{
+		newData[i] = make([]int, newCol)
+	}
+	for i:=0; i<newRow; i++ {
+		for j:=0; j<newCol; j++{
+			newData[i][j] = m.data[j][i];
+		}
+	}
+	return NewMatrix(newRow,newCol,newData);
+}
+
+func main(){
+	data  := [][]int{{1, 2, 3},   
+   					 {1, 2, 3},  
+   					 {1, 2, 3}}
+	mat := NewMatrix(len(data),len(data[0]),data);
+	transpose := mat.T();
+	fmt.Println(mat);
+	fmt.Println(transpose);
+
+	a := [][]int{{1,1,1,1,1}};
+	b := [][]int{{1},
+				 {1},
+				 {1},
+				 {1},
+				 {1}};
+    A := NewMatrix(len(a), len(a[0]), a);
+    B := NewMatrix(len(b), len(b[0]), b);
+    C := Product(A,B);
+    fmt.Println(C);
 }
 // TODO
 // Matrix multplication element by element and dot product FINISHED

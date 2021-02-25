@@ -167,10 +167,7 @@ func getStats(m mat.Matrix) (avg, stDev float64){
 }*/
 
 func dot(m, n mat.Matrix) mat.Matrix {
-	r, _ := m.Dims();
-	_, c := n.Dims();
-	o := mat.NewDense(r, c, nil);
-	o.Product(m, n);
+	o := Product(m, n);
 	return o;
 }
 
