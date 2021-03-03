@@ -1,5 +1,23 @@
 package main
-import ("fmt")
+import (//"fmt"
+		//"bytes"
+		"encoding/binary"
+		//"errors"
+		"io"
+		"math"
+)
+
+type storage struct {
+	Version uint32 // Keep this first.
+	Form    byte   // [GST]
+	Packing byte   // [BPF]
+	Uplo    byte   // [AUL]
+	Unit    bool
+	Rows    int64
+	Cols    int64
+	KU      int64
+	KL      int64
+}
 
 type Error struct{ string }
 
@@ -12,16 +30,28 @@ type Matrix struct {
 	data [][]int;
 }
 
-func NewMatrix(r, c int, nums [][]int) *Matrix {
+/*func NewMatrix(r, c int, nums [][]int) *Matrix {
 	mat := Matrix{row: r, col: c, data: nums};
 	return &mat
+}*/
+
+func NewMatrix(r, c int, nums []int) *Matrix {
+	data := make([][]int, r);
+	for i:=0; i<r; i++{
+		data[i] = make([]int, c);
+		for j:=0; j<c; j++{
+			data[i][j] = nums[i*c + j];
+		}
+	}
+	mat := Matrix{row: r, col: c, data: data};
+	return &mat;
 }
 
 func (m *Matrix) Dims() (r,c int){
 	return m.row, m.col
 }
 
-func (m *Matrix) set(r, c, val int){
+func (m *Matrix) Set(r, c, val int){
 	m.data[r][c] = val
 }
 
@@ -37,7 +67,7 @@ func (m *Matrix) MulElem(a, b *Matrix) {
 	}
 	for r := 0; r < ar; r++ {
 		for c := 0; c < ac; c++ {
-			m.set(r, c, a.At(r, c)*b.At(r, c))
+			m.Set(r, c, a.At(r, c)*b.At(r, c))
 		}
 	}
 }
@@ -50,7 +80,7 @@ func (m *Matrix) Add(a, b *Matrix) {
 	}
 	for r := 0; r < ar; r++ {
 		for c := 0; c < ac; c++ {
-			m.set(r, c, a.At(r, c)+b.At(r, c))
+			m.Set(r, c, a.At(r, c)+b.At(r, c))
 		}
 	}
 }
@@ -63,7 +93,7 @@ func (m *Matrix) Sub(a, b *Matrix) {
 	}
 	for r := 0; r < ar; r++ {
 		for c := 0; c < ac; c++ {
-			m.set(r, c, a.At(r, c)-b.At(r, c))
+			m.Set(r, c, a.At(r, c)-b.At(r, c))
 		}
 	}
 }
@@ -75,10 +105,7 @@ func Product(a, b *Matrix) *Matrix{
 	if ac != br {
 		panic(ErrShape)
 	}
-	newData := make([][]int, ar);
-	for i := range newData{
-		newData[i] = make([]int, bc)
-	}
+	newData := make([]int, ar*bc);
 	m := NewMatrix(ar,bc,newData)
 	for i := 0; i < ar; i++ {
 		for j := 0; j < bc; j++ {
@@ -86,7 +113,7 @@ func Product(a, b *Matrix) *Matrix{
 			for k := 0; k < ac; k++ {
 				sum += a.At(i,k)*b.At(k,j)
 			}
-			m.set(i, j, sum)
+			m.Set(i, j, sum)
 		}
 	}
 	return m;
@@ -94,40 +121,61 @@ func Product(a, b *Matrix) *Matrix{
 
 func (m *Matrix) T() *Matrix{
 	var newCol, newRow int = m.Dims();
-	newData := make([][]int, newRow);
-	for i := range newData{
-		newData[i] = make([]int, newCol)
-	}
+	newData := make([]int, newRow*newCol);
 	for i:=0; i<newRow; i++ {
 		for j:=0; j<newCol; j++{
-			newData[i][j] = m.data[j][i];
+			newData[i*newCol + j] = m.data[j][i];
 		}
 	}
 	return NewMatrix(newRow,newCol,newData);
 }
 
-func main(){
-	data  := [][]int{{1, 2, 3},   
-   					 {1, 2, 3},  
-   					 {1, 2, 3}}
-	mat := NewMatrix(len(data),len(data[0]),data);
-	transpose := mat.T();
-	fmt.Println(mat);
-	fmt.Println(transpose);
+func (m *Matrix) Scale(c int){
+	r,c := m.Dims();
+	for i:=0; i<r; i++{
+		for j:=0; j<c; j++{
+			m.Set(i,j,m.At(i,j)*c);
+		}
+	}
+}
 
-	a := [][]int{{1,1,1,1,1}};
-	b := [][]int{{1},
-				 {1},
-				 {1},
-				 {1},
-				 {1}};
-    A := NewMatrix(len(a), len(a[0]), a);
-    B := NewMatrix(len(b), len(b[0]), b);
-    C := Product(A,B);
-    fmt.Println(C);
+func (m *Matrix) Apply(fn func(i, j int, v int) int, a *Matrix){
+	ar, ac := a.Dims();
+	for r := 0; r < ar; r++ {
+		for c := 0; c < ac; c++ {
+			m.Set(r, c, fn(r, c, a.At(r, c)))
+		}
+	}
+}
+
+func (m *Matrix) MarshalBinaryTo(w io.Writer) (int, error) {
+	header := storage{
+		Form: 'G', Packing: 'F', Uplo: 'A',
+		Rows: int64(m.row), Cols: int64(m.col),
+		Version: version,
+	}
+	n, err := header.marshalBinaryTo(w)
+	if err != nil {
+		return n, err
+	}
+
+	r, c := m.Dims()
+	var b [8]byte
+	for i := 0; i < r; i++ {
+		for j := 0; j < c; j++ {
+			binary.LittleEndian.PutUint64(b[:], math.Float64bits(m.at(i, j)))
+			nn, err := w.Write(b[:])
+			n += nn
+			if err != nil {
+				return n, err
+			}
+		}
+	}
+
+	return n, nil
 }
 // TODO
 // Matrix multplication element by element and dot product FINISHED
 // add, subtract matrix FINISHED
-// transpose
+// transpose FINISHED
 // scaling
