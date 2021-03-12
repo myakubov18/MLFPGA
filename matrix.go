@@ -1,13 +1,13 @@
 package main
 import (//"fmt"
 		//"bytes"
-		"encoding/binary"
+		//"encoding/binary"
 		//"errors"
-		"io"
-		"math"
+		//"io"
+		//"math"
 )
 
-type storage struct {
+/*type storage struct {
 	Version uint32 // Keep this first.
 	Form    byte   // [GST]
 	Packing byte   // [BPF]
@@ -17,7 +17,7 @@ type storage struct {
 	Cols    int64
 	KU      int64
 	KL      int64
-}
+}*/
 
 type Error struct{ string }
 
@@ -148,7 +148,7 @@ func (m *Matrix) Apply(fn func(i, j int, v int) int, a *Matrix){
 	}
 }
 
-func (m *Matrix) MarshalBinaryTo(w io.Writer) (int, error) {
+/*func (m *Matrix) MarshalBinaryTo(w io.Writer) (int, error) {
 	header := storage{
 		Form: 'G', Packing: 'F', Uplo: 'A',
 		Rows: int64(m.row), Cols: int64(m.col),
@@ -173,7 +173,7 @@ func (m *Matrix) MarshalBinaryTo(w io.Writer) (int, error) {
 	}
 
 	return n, nil
-}
+}*/
 // TODO
 // Matrix multplication element by element and dot product FINISHED
 // add, subtract matrix FINISHED

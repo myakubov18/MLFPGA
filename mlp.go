@@ -4,12 +4,16 @@ import (
 	"fmt"
 	"image"
 	"image/png"
-	"math"
+	"math/rand"
+	"encoding/csv"
 	"os"
+	"strconv"
+	"io"
+	"bufio"
 	//"github.com/gonum/stat"
 
-	"gonum.org/v1/gonum/mat"
-	"gonum.org/v1/gonum/stat/distuv"
+	//"gonum.org/v1/gonum/mat"
+	//"gonum.org/v1/gonum/stat/distuv"
 	//"gonum.org/v1/gonum/stat"
 )
 
@@ -223,15 +227,15 @@ func subtract(m, n *Matrix) *Matrix {
 
 // randomly generate a float64 array
 func randomArray(size int, v int) (data []int) {
-	dist := distuv.Uniform{
+	/*dist := distuv.Uniform{
 		Min: 0,
 		Max: 1000000,
-	};
+	};*/
 
 	data = make([]int, size);
 	for i := 0; i < size; i++ {
 		// data[i] = rand.NormFloat64() * math.Pow(v, -0.5)
-		data[i] = dist.Rand();
+		data[i] = rand.Intn(1000000);
 	}
 	return;
 }
@@ -249,11 +253,11 @@ func addBiasNodeTo(m *Matrix, b int) *Matrix {
 
 // pretty print a Gonum *matrix
 func matrixPrint(X *Matrix) {
-	fa := mat.Formatted(X, mat.Prefix(""), mat.Squeeze());
-	fmt.Printf("%v\n", fa);
+	//fa := mat.Formatted(X, mat.Prefix(""), mat.Squeeze());
+	//fmt.Printf("%v\n", fa);
 }
 
-func save(net Network) {
+/*func save(net Network) {
 	h, err := os.Create("data/hweights.model");
 	defer h.Close();
 	if err == nil {
@@ -264,10 +268,40 @@ func save(net Network) {
 	if err == nil {
 		net.outputWeights.MarshalBinaryTo(o);
 	}
+}*/
+
+func save(net Network){
+	hidden, err := os.Create("data/hweights.csv");
+	defer hidden.Close();
+	if err == nil {
+		writer :=  csv.NewWriter(hidden)
+		defer writer.Flush()
+		for x := range net.hiddenWeights.data{
+			val_string := make([]string, len(net.hiddenWeights.data[x]))
+			for i, value := range net.hiddenWeights.data[x]{
+				val_string[i] = strconv.Itoa(value)
+			}
+			writer.Write(val_string)
+		}
+	}
+
+	out, err := os.Create("data/oweights.csv");
+	defer out.Close();
+	if err == nil {
+		writer :=  csv.NewWriter(out)
+		defer writer.Flush()
+		for x := range net.outputWeights.data{
+			val_string := make([]string, len(net.outputWeights.data[x]))
+			for i, value := range net.outputWeights.data[x]{
+				val_string[i] = strconv.Itoa(value)
+			}
+			writer.Write(val_string)	
+		}
+	}
 }
 
 // load a neural network from file
-func load(net *Network) {
+/*func load(net *Network) {
 	h, err := os.Open("data/hweights.model");
 	defer h.Close();
 	if err == nil {
@@ -281,6 +315,42 @@ func load(net *Network) {
 		net.outputWeights.UnmarshalBinaryFrom(o);
 	}
 	return;
+}*/
+
+func load(net *Network){
+	testFile, _ := os.Open("data/hweights.csv");
+	r := csv.NewReader(bufio.NewReader(testFile));
+	hweights := make([]int, net.hiddens);
+	for {
+			record, err := r.Read();
+			if err == io.EOF {
+				break;
+			}
+
+			for i := range hweights {
+				hweights[i], _ = strconv.Atoi(record[i]);
+			}
+		}
+		testFile.Close();
+
+	net.hiddenWeights = NewMatrix(net.hiddens, net.inputs, hweights);
+
+	testFile, _ = os.Open("data/oweights.csv");
+	r = csv.NewReader(bufio.NewReader(testFile));
+	oweights := make([]int, net.outputs);
+	for {
+			record, err := r.Read();
+			if err == io.EOF {
+				break;
+			}
+
+			for i := range oweights {
+				oweights[i], _ = strconv.Atoi(record[i]);
+			}
+		}
+		testFile.Close();
+
+	net.outputWeights = NewMatrix(net.outputs, net.hiddens, oweights);
 }
 
 // predict a number from an image
@@ -290,7 +360,7 @@ func predictFromImage(net Network, path string) int {
 	output := net.Predict(input);
 	matrixPrint(output);
 	best := 0;
-	highest := 0.0;
+	highest := 0;
 	for i := 0; i < net.outputs; i++ {
 		if output.At(i, 0) > highest {
 			best = i;

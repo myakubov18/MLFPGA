@@ -55,7 +55,7 @@ func mnistTrain(net *Network) {
 	rand.Seed(time.Now().UTC().UnixNano());
 	t1 := time.Now();
 	//fmt.Println("\n\nHidden Weights: ", net.hiddenWeights.At(0,500), "\n\n");
-	for epochs := 0; epochs < 5; epochs++ {
+	for epochs := 0; epochs < 1; epochs++ {
 		testFile, _ := os.Open("mnist_dataset/mnist_train.csv");
 		r := csv.NewReader(bufio.NewReader(testFile));
 		for {
