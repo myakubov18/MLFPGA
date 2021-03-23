@@ -37,10 +37,16 @@ type Matrix struct {
 
 func NewMatrix(r, c int, nums []int) *Matrix {
 	data := make([][]int, r);
+	//fmt.Println(c);
 	for i:=0; i<r; i++{
 		data[i] = make([]int, c);
-		for j:=0; j<c; j++{
-			data[i][j] = nums[i*c + j];
+		if nums != nil {
+			//fmt.Println(i);
+			for j:=0; j<c; j++{
+				//fmt.Print(j, " ");
+				data[i][j] = nums[i*c + j];
+			}
+			//fmt.Println();
 		}
 	}
 	mat := Matrix{row: r, col: c, data: data};
@@ -130,11 +136,20 @@ func (m *Matrix) T() *Matrix{
 	return NewMatrix(newRow,newCol,newData);
 }
 
-func (m *Matrix) Scale(c int){
-	r,c := m.Dims();
+func (m *Matrix) ScaleUp(c int){
+	r,col := m.Dims();
 	for i:=0; i<r; i++{
-		for j:=0; j<c; j++{
+		for j:=0; j<col; j++{
 			m.Set(i,j,m.At(i,j)*c);
+		}
+	}
+}
+
+func (m *Matrix) ScaleDown(c int){
+	r,col := m.Dims();
+	for i:=0; i<r; i++{
+		for j:=0; j<col; j++{
+			m.Set(i,j,m.At(i,j)/c);
 		}
 	}
 }

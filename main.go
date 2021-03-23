@@ -21,7 +21,7 @@ func main() {
 	// 100 hidden nodes - an arbitrary number
 	// 10 outputs - digits 0 to 9
 	// 0.1 is the learning rate
-	net := CreateNetwork(784, 100, 10, 1);
+	net := CreateNetwork(784, 100, 10, 100, 1000000);
 
 	mnist := flag.String("mnist", "", "Either train or predict to evaluate neural network");
 	file := flag.String("file", "", "File name of 28 x 28 PNG file to evaluate");
@@ -56,7 +56,7 @@ func mnistTrain(net *Network) {
 	t1 := time.Now();
 	//fmt.Println("\n\nHidden Weights: ", net.hiddenWeights.At(0,500), "\n\n");
 	for epochs := 0; epochs < 1; epochs++ {
-		testFile, _ := os.Open("mnist_dataset/mnist_train.csv");
+		testFile, _ := os.Open("mnist_dataset/mnist_train_1000.csv");
 		r := csv.NewReader(bufio.NewReader(testFile));
 		for {
 			record, err := r.Read();
@@ -120,7 +120,7 @@ func mnistPredict(net *Network) {
 		best := 0;
 		highest := 0;
 		for i := 0; i < net.outputs; i++ {
-			fmt.Println("%T\n", outputs);
+			//fmt.Println("%T\n", outputs);
 			//fmt.Println(type());
 			if outputs.At(i, 0) > highest {
 				best = i;
@@ -128,7 +128,7 @@ func mnistPredict(net *Network) {
 			}
 		}
 		target, _ := strconv.Atoi(record[0]);
-		//fmt.Println("Predicted: ", best, "... Target: ", target);
+		fmt.Println("Predicted: ", best, 	"... Target: ", target);
 		if best == target {
 			//fmt.Println("Predicted: ", best);
 			score++;

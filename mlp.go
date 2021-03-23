@@ -25,22 +25,24 @@ type Network struct {
 	hiddenWeights *Matrix;
 	outputWeights *Matrix;
 	learningRate  int;
+	scalingFactor int;
 }
 
 // CreateNetwork creates a neural network with random weights
-func CreateNetwork(input, hidden, output int, rate int) (net Network) {
+func CreateNetwork(input, hidden, output int, rate int, scale int) (net Network) {
 	net = Network{
 		inputs:       input,
 		hiddens:      hidden,
 		outputs:      output,
 		learningRate: rate,
+		scalingFactor: scale,
 	};
 	net.hiddenWeights = NewMatrix(net.hiddens, net.inputs, randomArray((net.inputs * net.hiddens), int(net.inputs)));
 	//fmt.Println("Initial Hidden Weights: ", net.hiddenWeights);
 	//fmt.Println("\n\n");
 	net.outputWeights = NewMatrix(net.outputs, net.hiddens, randomArray((net.hiddens * net.outputs), int(net.hiddens)));
 	//fmt.Println("Initial Output Weights: ", net.outputWeights);
-	fmt.Println("\n\n");
+	//fmt.Println("\n\n");
 	return;
 }
 
@@ -56,11 +58,14 @@ func (net *Network) Train(inputData []int, targetData []int) {
 	var hiddenErrors *Matrix;
 
 	inputs = NewMatrix(len(inputData), 1, inputData);
+	//fmt.Println("Inputs: ", inputs);
+	//fmt.Println("hiddenWeights: ", net.hiddenWeights);
+	hiddenInputs = scale(net.scalingFactor, dot(net.hiddenWeights, inputs));
+	//fmt.Println(hiddenInputs);
 
-	hiddenInputs = scale(1, dot(net.hiddenWeights, inputs));
 	hiddenOutputs = apply(sigmoid, hiddenInputs);
 
-	finalInputs = scale(1, dot(net.outputWeights, hiddenOutputs));
+	finalInputs = scale(net.scalingFactor, dot(net.outputWeights, hiddenOutputs));
 	finalOutputs = apply(sigmoid, finalInputs);
 
 	// find errors
@@ -92,11 +97,11 @@ func (net Network) Predict(inputData []int) *Matrix {
 	inputs = NewMatrix(len(inputData), 1, inputData);
 	//biasedInputs := addBiasNodeTo(inputs, 1);
 	//fmt.Println("Inputs: ", inputs);
-	hiddenInputs = scale(1, dot(net.hiddenWeights, inputs));
+	hiddenInputs = scale(net.scalingFactor, dot(net.hiddenWeights, inputs));
 	//fmt.Println("hiddenInputs: ", hiddenInputs);
 	hiddenOutputs = apply(sigmoid, hiddenInputs);
 	//fmt.Println("hiddenOutputs: ", hiddenOutputs);
-	finalInputs = scale(1, dot(net.outputWeights, hiddenOutputs));
+	finalInputs = scale(net.scalingFactor, dot(net.outputWeights, hiddenOutputs));
 	//fmt.Println("finalInputs: ", finalInputs);
 	finalOutputs = apply(sigmoid, finalInputs);
 	//fmt.Println("finalOutputs: ", finalOutputs);
@@ -189,7 +194,7 @@ func apply(fn func(i, j int, v int) int, m *Matrix) *Matrix {
 func scale(s int, m *Matrix) *Matrix {
 	//r, c := m.Dims();
 	//o := NewMatrix(r, c, nil);
-	m.Scale(s);
+	m.ScaleDown(s);
 	return m;
 }
 
@@ -320,31 +325,34 @@ func save(net Network){
 func load(net *Network){
 	testFile, _ := os.Open("data/hweights.csv");
 	r := csv.NewReader(bufio.NewReader(testFile));
-	hweights := make([]int, net.hiddens);
+	hweights := make([]int, net.hiddens*net.inputs);
 	for {
 			record, err := r.Read();
 			if err == io.EOF {
 				break;
 			}
 
-			for i := range hweights {
+			for i := range record {
+				//hweights[i] = make([]int, net.inputs)
+				//fmt.Println(i);
 				hweights[i], _ = strconv.Atoi(record[i]);
 			}
 		}
 		testFile.Close();
-
+	//fmt.println(hweights);
+	//fmt.Println(len(hweights));
 	net.hiddenWeights = NewMatrix(net.hiddens, net.inputs, hweights);
 
 	testFile, _ = os.Open("data/oweights.csv");
 	r = csv.NewReader(bufio.NewReader(testFile));
-	oweights := make([]int, net.outputs);
+	oweights := make([]int, net.outputs*net.inputs);
 	for {
 			record, err := r.Read();
 			if err == io.EOF {
 				break;
 			}
 
-			for i := range oweights {
+			for i := range record {
 				oweights[i], _ = strconv.Atoi(record[i]);
 			}
 		}
