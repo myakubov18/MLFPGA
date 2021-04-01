@@ -58,14 +58,19 @@ func (net *Network) Train(inputData []int, targetData []int) {
 	var hiddenErrors *Matrix;
 
 	inputs = NewMatrix(len(inputData), 1, inputData);
-	//fmt.Println("Inputs: ", inputs);
+	//fmt.Println("Inputs: ", inputs.row, " ", inputs.col);
+	fmt.Println("Inputs: ", inputs);
 	//fmt.Println("hiddenWeights: ", net.hiddenWeights);
-	hiddenInputs = scale(net.scalingFactor, dot(net.hiddenWeights, inputs));
-	//fmt.Println(hiddenInputs);
+	//fmt.Println("hiddenWeights: ", net.hiddenWeights.row, " ", net.hiddenWeights.col);
+	hiddenInputs = scale(255*784*100, dot(net.hiddenWeights, inputs));
+	//fmt.Println("hiddenInputs: ", hiddenInputs.row, " ", hiddenInputs.col);
+	fmt.Println(hiddenInputs);
 
 	hiddenOutputs = apply(sigmoid, hiddenInputs);
 
-	finalInputs = scale(net.scalingFactor, dot(net.outputWeights, hiddenOutputs));
+	finalInputs = scale(255*784*100, dot(net.outputWeights, hiddenOutputs));
+
+	fmt.Println("finalInputs: ", finalInputs);
 	finalOutputs = apply(sigmoid, finalInputs);
 
 	// find errors

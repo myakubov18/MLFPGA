@@ -28,6 +28,7 @@ var (
 type Matrix struct {
 	row, col int;
 	data [][]int;
+	min, max int;
 }
 
 /*func NewMatrix(r, c int, nums [][]int) *Matrix {
@@ -37,6 +38,9 @@ type Matrix struct {
 
 func NewMatrix(r, c int, nums []int) *Matrix {
 	data := make([][]int, r);
+	max := 0;
+	min := int(^uint(0)>>1);
+	//fmt.Println(min);
 	//fmt.Println(c);
 	for i:=0; i<r; i++{
 		data[i] = make([]int, c);
@@ -45,12 +49,26 @@ func NewMatrix(r, c int, nums []int) *Matrix {
 			for j:=0; j<c; j++{
 				//fmt.Print(j, " ");
 				data[i][j] = nums[i*c + j];
+				if(nums[i*c+j]>max){
+					//fmt.Println("new max: ", nums[i*c+j]);
+					max = nums[i*c+j];
+				}
+				if(nums[i*c+j] < min){
+					//fmt.Println("new min: ", nums[i*c+j]);
+					min = nums[i*c+j]
+				}
 			}
 			//fmt.Println();
 		}
 	}
-	mat := Matrix{row: r, col: c, data: data};
+	//fmt.Println("Max: ", max);
+	//fmt.Println("Min: ", min);
+	mat := Matrix{row: r, col: c, data: data, min:min, max:max};
 	return &mat;
+}
+
+func (m *Matrix) getMin() {
+	
 }
 
 func (m *Matrix) Dims() (r,c int){
@@ -163,32 +181,6 @@ func (m *Matrix) Apply(fn func(i, j int, v int) int, a *Matrix){
 	}
 }
 
-/*func (m *Matrix) MarshalBinaryTo(w io.Writer) (int, error) {
-	header := storage{
-		Form: 'G', Packing: 'F', Uplo: 'A',
-		Rows: int64(m.row), Cols: int64(m.col),
-		Version: version,
-	}
-	n, err := header.marshalBinaryTo(w)
-	if err != nil {
-		return n, err
-	}
-
-	r, c := m.Dims()
-	var b [8]byte
-	for i := 0; i < r; i++ {
-		for j := 0; j < c; j++ {
-			binary.LittleEndian.PutUint64(b[:], math.Float64bits(m.at(i, j)))
-			nn, err := w.Write(b[:])
-			n += nn
-			if err != nil {
-				return n, err
-			}
-		}
-	}
-
-	return n, nil
-}*/
 // TODO
 // Matrix multplication element by element and dot product FINISHED
 // add, subtract matrix FINISHED
