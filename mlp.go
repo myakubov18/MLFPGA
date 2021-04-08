@@ -24,12 +24,12 @@ type Network struct {
 	outputs       int;
 	hiddenWeights *Matrix;
 	outputWeights *Matrix;
-	learningRate  int;
-	scalingFactor int;
+	learningRate  int64;
+	scalingFactor int64;
 }
 
 // CreateNetwork creates a neural network with random weights
-func CreateNetwork(input, hidden, output int, rate int, scale int) (net Network) {
+func CreateNetwork(input, hidden, output int, rate int64, scale int64) (net Network) {
 	net = Network{
 		inputs:       input,
 		hiddens:      hidden,
@@ -37,17 +37,17 @@ func CreateNetwork(input, hidden, output int, rate int, scale int) (net Network)
 		learningRate: rate,
 		scalingFactor: scale,
 	};
-	net.hiddenWeights = NewMatrix(net.hiddens, net.inputs, randomArray((net.inputs * net.hiddens), int(net.inputs)));
+	net.hiddenWeights = NewMatrix(net.hiddens, net.inputs, randomArray((net.inputs * net.hiddens), int64(net.inputs)));
 	//fmt.Println("Initial Hidden Weights: ", net.hiddenWeights);
 	//fmt.Println("\n\n");
-	net.outputWeights = NewMatrix(net.outputs, net.hiddens, randomArray((net.hiddens * net.outputs), int(net.hiddens)));
+	net.outputWeights = NewMatrix(net.outputs, net.hiddens, randomArray((net.hiddens * net.outputs), int64(net.hiddens)));
 	//fmt.Println("Initial Output Weights: ", net.outputWeights);
 	//fmt.Println("\n\n");
 	return;
 }
 
 // Train the neural network
-func (net *Network) Train(inputData []int, targetData []int) {
+func (net *Network) Train(inputData []int64, targetData []int64) {
 	// feedforward
 	var inputs *Matrix;
 	var hiddenInputs *Matrix;
@@ -91,7 +91,7 @@ func (net *Network) Train(inputData []int, targetData []int) {
 }
 
 // Predict uses the neural network to predict the value given input data
-func (net Network) Predict(inputData []int) *Matrix {
+func (net Network) Predict(inputData []int64) *Matrix {
 	// feedforward
 	var inputs *Matrix;
 	var hiddenInputs *Matrix;
@@ -116,7 +116,7 @@ func (net Network) Predict(inputData []int) *Matrix {
 //REPLACED SIGMOID WITH RELU THIS IS ACTUALLY RELU WE WERE JUST LAZY
 
 
-func sigmoid(r, c int, z int) int{
+func sigmoid(r, c int, z int64) int64{
     if z > 0 {
         return z;
     }else{
@@ -124,7 +124,7 @@ func sigmoid(r, c int, z int) int{
     } //simple ReLU activation function
 }
 
-func relu2(r, c int, z int) int{
+func relu2(r, c int, z int64) int64{
     if z > 0 {
         return 1;
     }else{
@@ -189,14 +189,14 @@ func dot(m, n *Matrix) *Matrix {
 	return -1*v
 }*/
 
-func apply(fn func(i, j int, v int) int, m *Matrix) *Matrix {
+func apply(fn func(i, j int, v int64) int64, m *Matrix) *Matrix {
 	r, c := m.Dims();
 	o := NewMatrix(r, c, nil);
 	o.Apply(fn, m);
 	return o;
 }
 
-func scale(s int, m *Matrix) *Matrix {
+func scale(s int64, m *Matrix) *Matrix {
 	//r, c := m.Dims();
 	//o := NewMatrix(r, c, nil);
 	m.ScaleDown(s);
@@ -217,9 +217,9 @@ func add(m, n *Matrix) *Matrix {
 	return o;
 }
 
-func addScalar(i int, m *Matrix) *Matrix {
+func addScalar(i int64, m *Matrix) *Matrix {
 	r, c := m.Dims();
-	a := make([]int, r*c);
+	a := make([]int64, r*c);
 	for x := 0; x < r*c; x++ {
 		a[x] = i;
 	}
@@ -236,21 +236,21 @@ func subtract(m, n *Matrix) *Matrix {
 
 
 // randomly generate a float64 array
-func randomArray(size int, v int) (data []int) {
+func randomArray(size int, v int64) (data []int64) {
 	/*dist := distuv.Uniform{
 		Min: 0,
 		Max: 1000000,
 	};*/
 
-	data = make([]int, size);
+	data = make([]int64, size);
 	for i := 0; i < size; i++ {
 		// data[i] = rand.NormFloat64() * math.Pow(v, -0.5)
-		data[i] = rand.Intn(1000000);
+		data[i] = int64(rand.Intn(1000000));
 	}
 	return;
 }
 
-func addBiasNodeTo(m *Matrix, b int) *Matrix {
+func addBiasNodeTo(m *Matrix, b int64) *Matrix {
 	r, _ := m.Dims();
 	a := NewMatrix(r+1, 1, nil);
 
@@ -289,7 +289,7 @@ func save(net Network){
 		for x := range net.hiddenWeights.data{
 			val_string := make([]string, len(net.hiddenWeights.data[x]))
 			for i, value := range net.hiddenWeights.data[x]{
-				val_string[i] = strconv.Itoa(value)
+				val_string[i] = strconv.FormatInt(value,10)
 			}
 			writer.Write(val_string)
 		}
@@ -303,7 +303,7 @@ func save(net Network){
 		for x := range net.outputWeights.data{
 			val_string := make([]string, len(net.outputWeights.data[x]))
 			for i, value := range net.outputWeights.data[x]{
-				val_string[i] = strconv.Itoa(value)
+				val_string[i] = strconv.FormatInt(value,10)
 			}
 			writer.Write(val_string)	
 		}
@@ -330,7 +330,7 @@ func save(net Network){
 func load(net *Network){
 	testFile, _ := os.Open("data/hweights.csv");
 	r := csv.NewReader(bufio.NewReader(testFile));
-	hweights := make([]int, net.hiddens*net.inputs);
+	hweights := make([]int64, net.hiddens*net.inputs);
 	for {
 			record, err := r.Read();
 			if err == io.EOF {
@@ -340,7 +340,7 @@ func load(net *Network){
 			for i := range record {
 				//hweights[i] = make([]int, net.inputs)
 				//fmt.Println(i);
-				hweights[i], _ = strconv.Atoi(record[i]);
+				hweights[i], _ = strconv.ParseInt(record[i],10,64);
 			}
 		}
 		testFile.Close();
@@ -350,7 +350,7 @@ func load(net *Network){
 
 	testFile, _ = os.Open("data/oweights.csv");
 	r = csv.NewReader(bufio.NewReader(testFile));
-	oweights := make([]int, net.outputs*net.inputs);
+	oweights := make([]int64, net.outputs*net.inputs);
 	for {
 			record, err := r.Read();
 			if err == io.EOF {
@@ -358,7 +358,7 @@ func load(net *Network){
 			}
 
 			for i := range record {
-				oweights[i], _ = strconv.Atoi(record[i]);
+				oweights[i], _ = strconv.ParseInt(record[i],10,64);
 			}
 		}
 		testFile.Close();
@@ -372,8 +372,8 @@ func predictFromImage(net Network, path string) int {
 	input := dataFromImage(path);
 	output := net.Predict(input);
 	matrixPrint(output);
-	best := 0;
-	highest := 0;
+	var best int = 0;
+	var highest int64= 0;
 	for i := 0; i < net.outputs; i++ {
 		if output.At(i, 0) > highest {
 			best = i;
@@ -385,7 +385,7 @@ func predictFromImage(net Network, path string) int {
 }
 
 // get the pixel data from an image
-func dataFromImage(filePath string) (pixels []int) {
+func dataFromImage(filePath string) (pixels []int64) {
 	// read the file
 	imgFile, err := os.Open(filePath);
 	defer imgFile.Close();
@@ -408,11 +408,11 @@ func dataFromImage(filePath string) (pixels []int) {
 		}
 	}
 	// make a pixel array
-	pixels = make([]int, len(gray.Pix));
+	pixels = make([]int64, len(gray.Pix));
 	// populate the pixel array subtract Pix from 255 because that's how
 	// the MNIST database was trained (in reverse)
 	for i := 0; i < len(gray.Pix); i++ {
-		pixels[i] = (int(255-gray.Pix[i]));
+		pixels[i] = (int64(255-gray.Pix[i]));
 	}
 	return;
 }

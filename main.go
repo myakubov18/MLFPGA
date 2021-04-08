@@ -64,15 +64,16 @@ func mnistTrain(net *Network) {
 				break;
 			}
 
-			inputs := make([]int, net.inputs);
+			inputs := make([]int64, net.inputs);
 			for i := range inputs {
-				inputs[i], _ = strconv.Atoi(record[i]);
+				//inputs[i], _ = strconv.Atoi(record[i]);
+				inputs[i], _ = strconv.ParseInt(record[i],10,64);
 				//inputs[i] = (x / 255.0 * 9.99) + 0.01;
 				//inputs[i] = x + 1
 			}
 			//fmt.Println("inputs: ", inputs);
 
-			targets := make([]int, net.outputs);
+			targets := make([]int64, net.outputs);
 			for i := range targets {
 				//targets[i] = 0.01;
 				targets[i] = 1;
@@ -106,19 +107,20 @@ func mnistPredict(net *Network) {
 		if err == io.EOF {
 			break;
 		}
-		inputs := make([]int, net.inputs);
+		inputs := make([]int64, net.inputs);
 		for i := range inputs {
 			if i == 0 {
 				inputs[i] = 1;
 			}
-			inputs[i], _ = strconv.Atoi(record[i]);
+			//inputs[i], _ = strconv.Atoi(record[i]);
+			inputs[i], _ = strconv.ParseInt(record[i],10,64);
 			//inputs[i] = (x / 255.0 * 9.99) + 0.01;
 		}
 		//fmt.Println("inputs: ", inputs);
 		outputs := net.Predict(inputs);
 		//fmt.Println("outputs: ", outputs)
 		best := 0;
-		highest := 0;
+		var highest int64 = 0;
 		for i := 0; i < net.outputs; i++ {
 			//fmt.Println("%T\n", outputs);
 			//fmt.Println(type());

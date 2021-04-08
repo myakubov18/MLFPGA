@@ -27,8 +27,8 @@ var (
 
 type Matrix struct {
 	row, col int;
-	data [][]int;
-	min, max int;
+	data [][]int64;
+	min, max int64;
 }
 
 /*func NewMatrix(r, c int, nums [][]int) *Matrix {
@@ -36,14 +36,14 @@ type Matrix struct {
 	return &mat
 }*/
 
-func NewMatrix(r, c int, nums []int) *Matrix {
-	data := make([][]int, r);
-	max := 0;
-	min := int(^uint(0)>>1);
+func NewMatrix(r, c int, nums []int64) *Matrix {
+	data := make([][]int64, r);
+	var max int64 = 0;
+	var min int64 = int64(^uint64(0)>>1);
 	//fmt.Println(min);
 	//fmt.Println(c);
 	for i:=0; i<r; i++{
-		data[i] = make([]int, c);
+		data[i] = make([]int64, c);
 		if nums != nil {
 			//fmt.Println(i);
 			for j:=0; j<c; j++{
@@ -75,11 +75,11 @@ func (m *Matrix) Dims() (r,c int){
 	return m.row, m.col
 }
 
-func (m *Matrix) Set(r, c, val int){
+func (m *Matrix) Set(r, c int, val int64){
 	m.data[r][c] = val
 }
 
-func (m *Matrix) At(r, c int) int {
+func (m *Matrix) At(r, c int) int64 {
 	return m.data[r][c]
 }
 
@@ -129,11 +129,11 @@ func Product(a, b *Matrix) *Matrix{
 	if ac != br {
 		panic(ErrShape)
 	}
-	newData := make([]int, ar*bc);
+	newData := make([]int64, ar*bc);
 	m := NewMatrix(ar,bc,newData)
 	for i := 0; i < ar; i++ {
 		for j := 0; j < bc; j++ {
-			var sum int = 0
+			var sum int64 = 0
 			for k := 0; k < ac; k++ {
 				sum += a.At(i,k)*b.At(k,j)
 			}
@@ -145,7 +145,7 @@ func Product(a, b *Matrix) *Matrix{
 
 func (m *Matrix) T() *Matrix{
 	var newCol, newRow int = m.Dims();
-	newData := make([]int, newRow*newCol);
+	newData := make([]int64, newRow*newCol);
 	for i:=0; i<newRow; i++ {
 		for j:=0; j<newCol; j++{
 			newData[i*newCol + j] = m.data[j][i];
@@ -154,7 +154,7 @@ func (m *Matrix) T() *Matrix{
 	return NewMatrix(newRow,newCol,newData);
 }
 
-func (m *Matrix) ScaleUp(c int){
+func (m *Matrix) ScaleUp(c int64){
 	r,col := m.Dims();
 	for i:=0; i<r; i++{
 		for j:=0; j<col; j++{
@@ -163,7 +163,7 @@ func (m *Matrix) ScaleUp(c int){
 	}
 }
 
-func (m *Matrix) ScaleDown(c int){
+func (m *Matrix) ScaleDown(c int64){
 	r,col := m.Dims();
 	for i:=0; i<r; i++{
 		for j:=0; j<col; j++{
@@ -172,7 +172,7 @@ func (m *Matrix) ScaleDown(c int){
 	}
 }
 
-func (m *Matrix) Apply(fn func(i, j int, v int) int, a *Matrix){
+func (m *Matrix) Apply(fn func(i, j int, v int64) int64, a *Matrix){
 	ar, ac := a.Dims();
 	for r := 0; r < ar; r++ {
 		for c := 0; c < ac; c++ {
