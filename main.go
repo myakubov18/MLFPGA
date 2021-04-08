@@ -5,7 +5,7 @@ import (
 	"bytes"
 	"encoding/base64"
 	"encoding/csv"
-	"flag"
+//	"flag"
 	"fmt"
 	"image"
 	"image/png"
@@ -21,7 +21,7 @@ func main() {
 	// 100 hidden nodes - an arbitrary number
 	// 10 outputs - digits 0 to 9
 	// 0.1 is the learning rate
-	net := CreateNetwork(784, 100, 10, 1000, 1000000);
+	/*net := CreateNetwork(784, 100, 10, 1000, 1000000);
 
 	mnist := flag.String("mnist", "", "Either train or predict to evaluate neural network");
 	file := flag.String("file", "", "File name of 28 x 28 PNG file to evaluate");
@@ -48,7 +48,13 @@ func main() {
 		// predict which number it is
 		fmt.Println("prediction:", predictFromImage(net, *file));
 	}
-
+*/
+	var a int64 = ((int64(0x00000005)) << 32) + 0xD0000000
+	var b int64 = ((int64(0x00000003)) << 32) + 0x70000000
+	fmt.Println(a)
+	fmt.Println(b)
+	c := MultiplyFixed(a, b)
+	fmt.Println(c)
 }
 
 func mnistTrain(net *Network) {
@@ -160,6 +166,6 @@ func getImage(filePath string) image.Image {
 	img, _, err := image.Decode(imgFile);
 	if err != nil {
 		fmt.Println("Cannot decode file:", err);
-	}	
+	}
 	return img;
 }

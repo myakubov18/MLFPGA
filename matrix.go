@@ -19,6 +19,12 @@ import (//"fmt"
 	KL      int64
 }*/
 
+const m0 = 0x5555555555555555 // 01010101 ...
+const m1 = 0x3333333333333333 // 00110011 ...
+const m2 = 0x0f0f0f0f0f0f0f0f // 00001111 ...
+const m3 = 0x00ff00ff00ff00ff // etc.
+const m4 = 0x0000ffff0000ffff
+
 type Error struct{ string }
 
 var (
@@ -91,7 +97,7 @@ func (m *Matrix) MulElem(a, b *Matrix) {
 	}
 	for r := 0; r < ar; r++ {
 		for c := 0; c < ac; c++ {
-			m.Set(r, c, a.At(r, c)*b.At(r, c))
+			m.Set(r, c, MultiplyFixed(a.At(r, c),b.At(r, c)))
 		}
 	}
 }
@@ -135,7 +141,7 @@ func Product(a, b *Matrix) *Matrix{
 		for j := 0; j < bc; j++ {
 			var sum int64 = 0
 			for k := 0; k < ac; k++ {
-				sum += a.At(i,k)*b.At(k,j)
+				sum += MultiplyFixed(a.At(i,k),b.At(k,j))
 			}
 			m.Set(i, j, sum)
 		}
@@ -154,11 +160,11 @@ func (m *Matrix) T() *Matrix{
 	return NewMatrix(newRow,newCol,newData);
 }
 
-func (m *Matrix) ScaleUp(c int64){
+func (m *Matrix) Scale(c int64){
 	r,col := m.Dims();
 	for i:=0; i<r; i++{
 		for j:=0; j<col; j++{
-			m.Set(i,j,m.At(i,j)*c);
+			m.Set(i,j,MultiplyFixed(m.At(i,j),c));
 		}
 	}
 }
@@ -179,6 +185,37 @@ func (m *Matrix) Apply(fn func(i, j int, v int64) int64, a *Matrix){
 			m.Set(r, c, fn(r, c, a.At(r, c)))
 		}
 	}
+}
+
+//need to account for things like negative numbers properly, fix after i optimize this to not use loops;
+func MultiplyFixed(a, b int64) int64{
+	bL := b >> 32
+	res := a * bL
+	bR := int64(Reverse64(uint64(b)) >> 32)
+	v:=a>> 1;
+	for i:=0; i < 32; i++ {
+		if bR% 2 == 1{
+			res += v
+		}
+		v = v >>1;
+		bR = bR >> 1;
+	}
+	return res
+}
+
+func ReverseBytes64(x uint64) uint64 {
+	const m = 1<<64 - 1
+	x = x>>8&(m3&m) | x&(m3&m)<<8
+	x = x>>16&(m4&m) | x&(m4&m)<<16
+	return x>>32 | x<<32
+}
+
+func Reverse64(x uint64) uint64 {
+	const m = 1<<64 - 1
+	x = x>>1&(m0&m) | x&(m0&m)<<1
+	x = x>>2&(m1&m) | x&(m1&m)<<2
+	x = x>>4&(m2&m) | x&(m2&m)<<4
+	return ReverseBytes64(x)
 }
 
 // TODO
