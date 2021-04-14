@@ -189,6 +189,11 @@ func (m *Matrix) Apply(fn func(i, j int, v int64) int64, a *Matrix){
 
 //need to account for things like negative numbers properly, fix after i optimize this to not use loops;
 func MultiplyFixed(a, b int64) int64{
+	var isNegative bool = false;
+	if (a < 0) != (b < 0)
+		isNegative = true
+	a &= 0x7FFFFFFFFFFFFFFF
+	b &= 0x7FFFFFFFFFFFFFFF
 	bL := b >> 32
 	res := a * bL
 	bR := int64(Reverse64(uint64(b)) >> 32)
@@ -200,6 +205,7 @@ func MultiplyFixed(a, b int64) int64{
 		v = v >>1;
 		bR = bR >> 1;
 	}
+	
 	return res
 }
 
