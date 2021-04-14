@@ -103,8 +103,8 @@ func (m *Matrix) MulElem(a, b *Matrix) {
 	}
 	for r := 0; r < ar; r++ {
 		for c := 0; c < ac; c++ {
-			foo = MultiplyFixed(a.At(r, c)
-			m.Set(r, c, foo,b.At(r, c)))
+			foo = MultiplyFixed(a.At(r, c))
+			m.Set(r, c, foo,b.At(r, c))
 			if(foo < min) {
 				m.min = foo
 			}
@@ -230,8 +230,9 @@ func (m *Matrix) Apply(fn func(i, j int, v int64) int64, a *Matrix){
 //need to account for things like negative numbers properly, fix after i optimize this to not use loops;
 func MultiplyFixed(a, b int64) int64{
 	var isNegative bool = false;
-	if (a < 0) != (b < 0)
+	if (a < 0) != (b < 0) {
 		isNegative = true
+	}
 	a &= 0x7FFFFFFFFFFFFFFF
 	b &= 0x7FFFFFFFFFFFFFFF
 	bL := b >> 32
