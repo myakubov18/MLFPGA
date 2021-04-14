@@ -232,7 +232,7 @@ func MultiplyFixed(a, b int64) int64{
 	var isNegative bool = false;
 	if (a < 0) != (b < 0){
 		isNegative = true
-  }
+	}
 	a &= 0x7FFFFFFFFFFFFFFF
 	b &= 0x7FFFFFFFFFFFFFFF
 	bL := b >> 32
@@ -247,9 +247,9 @@ func MultiplyFixed(a, b int64) int64{
 		bR = bR >> 1;
 	}
 	if(isNegative && res >= 0) {
-    res = -res
-	}	else if(!isNegative && res < 0) {
-    res = -res
+	    res = -res
+	} else if(!isNegative && res < 0) {
+	    res = -res
 	}
 	return res
 }
