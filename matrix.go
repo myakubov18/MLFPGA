@@ -83,10 +83,10 @@ func (m *Matrix) Dims() (r,c int){
 
 func (m *Matrix) Set(r, c int, val int64){
 	m.data[r][c] = val
-	if(val < min) {
+	if(val < m.min) {
 		m.min = val
 	}
-	if(val > max) {
+	if(val > m.max) {
 		m.max = val
 	}
 }
@@ -103,12 +103,12 @@ func (m *Matrix) MulElem(a, b *Matrix) {
 	}
 	for r := 0; r < ar; r++ {
 		for c := 0; c < ac; c++ {
-			foo = MultiplyFixed(a.At(r, c))
-			m.Set(r, c, foo,b.At(r, c))
-			if(foo < min) {
+			foo := MultiplyFixed(a.At(r, c),b.At(r, c))
+			m.Set(r, c, foo)
+			if(foo < m.min) {
 				m.min = foo
 			}
-			if(foo > max) {
+			if(foo > m.max) {
 				m.max = foo
 			}
 		}
@@ -123,12 +123,12 @@ func (m *Matrix) Add(a, b *Matrix) {
 	}
 	for r := 0; r < ar; r++ {
 		for c := 0; c < ac; c++ {
-			foo = a.At(r, c)+b.At(r, c)
+			foo := a.At(r, c)+b.At(r, c)
 			m.Set(r, c, foo)
-			if(foo < min) {
+			if(foo < m.min) {
 				m.min = foo
 			}
-			if(foo > max) {
+			if(foo > m.max) {
 				m.max = foo
 			}
 		}
@@ -143,12 +143,12 @@ func (m *Matrix) Sub(a, b *Matrix) {
 	}
 	for r := 0; r < ar; r++ {
 		for c := 0; c < ac; c++ {
-			foo = a.At(r, c)-b.At(r, c)
+			foo := a.At(r, c)-b.At(r, c)
 			m.Set(r, c, foo)
-			if(foo < min) {
+			if(foo < m.min) {
 				m.min = foo
 			}
-			if(foo > max) {
+			if(foo > m.max) {
 				m.max = foo
 			}
 		}
@@ -171,11 +171,11 @@ func Product(a, b *Matrix) *Matrix{
 				sum += MultiplyFixed(a.At(i,k),b.At(k,j))
 			}
 			m.Set(i, j, sum)
-			if(sum < min) {
-				m.min = foo
+			if(sum < m.min) {
+				m.min = sum
 			}
-			if(sum > max) {
-				m.max = foo
+			if(sum > m.max) {
+				m.max = sum
 			}
 		}
 	}
@@ -197,12 +197,12 @@ func (m *Matrix) Scale(c int64){
 	r,col := m.Dims();
 	for i:=0; i<r; i++{
 		for j:=0; j<col; j++{
-			foo = MultiplyFixed(m.At(i,j),c)
+			foo := MultiplyFixed(m.At(i,j),c)
 			m.Set(i,j,foo);
-			if(foo < min) {
+			if(foo < m.min) {
 				m.min = foo
 			}
-			if(foo > max) {
+			if(foo > m.max) {
 				m.max = foo
 			}
 		}
@@ -230,9 +230,9 @@ func (m *Matrix) Apply(fn func(i, j int, v int64) int64, a *Matrix){
 //need to account for things like negative numbers properly, fix after i optimize this to not use loops;
 func MultiplyFixed(a, b int64) int64{
 	var isNegative bool = false;
-	if (a < 0) != (b < 0) {
+	if (a < 0) != (b < 0){
 		isNegative = true
-	}
+  }
 	a &= 0x7FFFFFFFFFFFFFFF
 	b &= 0x7FFFFFFFFFFFFFFF
 	bL := b >> 32
@@ -246,11 +246,10 @@ func MultiplyFixed(a, b int64) int64{
 		v = v >>1;
 		bR = bR >> 1;
 	}
-	if(isNegative) {
-		res |= 0x8000000000000000
-	}
-	else {
-		res &= 0x7FFFFFFFFFFFFFFF
+	if(isNegative && res >= 0) {
+    res = -res
+	}	else if(!isNegative && res < 0) {
+    res = -res
 	}
 	return res
 }
