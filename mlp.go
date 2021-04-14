@@ -62,13 +62,13 @@ func (net *Network) Train(inputData []int64, targetData []int64) {
 	fmt.Println("Inputs: ", inputs);
 	//fmt.Println("hiddenWeights: ", net.hiddenWeights);
 	//fmt.Println("hiddenWeights: ", net.hiddenWeights.row, " ", net.hiddenWeights.col);
-	hiddenInputs = scale(255*784*100, dot(net.hiddenWeights, inputs));
+	hiddenInputs = scale(1, dot(net.hiddenWeights, inputs));
 	//fmt.Println("hiddenInputs: ", hiddenInputs.row, " ", hiddenInputs.col);
 	fmt.Println(hiddenInputs);
 
 	hiddenOutputs = apply(sigmoid, hiddenInputs);
 
-	finalInputs = scale(255*784*100, dot(net.outputWeights, hiddenOutputs));
+	finalInputs = scale(1, dot(net.outputWeights, hiddenOutputs));
 
 	fmt.Println("finalInputs: ", finalInputs);
 	finalOutputs = apply(sigmoid, finalInputs);
