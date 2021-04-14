@@ -83,6 +83,12 @@ func (m *Matrix) Dims() (r,c int){
 
 func (m *Matrix) Set(r, c int, val int64){
 	m.data[r][c] = val
+	if(val < min) {
+		m.min = val
+	}
+	if(val > max) {
+		m.max = val
+	}
 }
 
 func (m *Matrix) At(r, c int) int64 {
@@ -97,7 +103,14 @@ func (m *Matrix) MulElem(a, b *Matrix) {
 	}
 	for r := 0; r < ar; r++ {
 		for c := 0; c < ac; c++ {
-			m.Set(r, c, MultiplyFixed(a.At(r, c),b.At(r, c)))
+			foo = MultiplyFixed(a.At(r, c)
+			m.Set(r, c, foo,b.At(r, c)))
+			if(foo < min) {
+				m.min = foo
+			}
+			if(foo > max) {
+				m.max = foo
+			}
 		}
 	}
 }
@@ -110,7 +123,14 @@ func (m *Matrix) Add(a, b *Matrix) {
 	}
 	for r := 0; r < ar; r++ {
 		for c := 0; c < ac; c++ {
-			m.Set(r, c, a.At(r, c)+b.At(r, c))
+			foo = a.At(r, c)+b.At(r, c)
+			m.Set(r, c, foo)
+			if(foo < min) {
+				m.min = foo
+			}
+			if(foo > max) {
+				m.max = foo
+			}
 		}
 	}
 }
@@ -123,7 +143,14 @@ func (m *Matrix) Sub(a, b *Matrix) {
 	}
 	for r := 0; r < ar; r++ {
 		for c := 0; c < ac; c++ {
-			m.Set(r, c, a.At(r, c)-b.At(r, c))
+			foo = a.At(r, c)-b.At(r, c)
+			m.Set(r, c, foo)
+			if(foo < min) {
+				m.min = foo
+			}
+			if(foo > max) {
+				m.max = foo
+			}
 		}
 	}
 }
@@ -144,6 +171,12 @@ func Product(a, b *Matrix) *Matrix{
 				sum += MultiplyFixed(a.At(i,k),b.At(k,j))
 			}
 			m.Set(i, j, sum)
+			if(sum < min) {
+				m.min = foo
+			}
+			if(sum > max) {
+				m.max = foo
+			}
 		}
 	}
 	return m;
@@ -164,11 +197,18 @@ func (m *Matrix) Scale(c int64){
 	r,col := m.Dims();
 	for i:=0; i<r; i++{
 		for j:=0; j<col; j++{
-			m.Set(i,j,MultiplyFixed(m.At(i,j),c));
+			foo = MultiplyFixed(m.At(i,j),c)
+			m.Set(i,j,foo);
+			if(foo < min) {
+				m.min = foo
+			}
+			if(foo > max) {
+				m.max = foo
+			}
 		}
 	}
 }
-
+// unused?
 func (m *Matrix) ScaleDown(c int64){
 	r,col := m.Dims();
 	for i:=0; i<r; i++{
@@ -205,10 +245,12 @@ func MultiplyFixed(a, b int64) int64{
 		v = v >>1;
 		bR = bR >> 1;
 	}
-	if(isNegative)
+	if(isNegative) {
 		res |= 0x8000000000000000
-	else
+	}
+	else {
 		res &= 0x7FFFFFFFFFFFFFFF
+	}
 	return res
 }
 
