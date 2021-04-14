@@ -199,7 +199,7 @@ func apply(fn func(i, j int, v int64) int64, m *Matrix) *Matrix {
 func scale(s int64, m *Matrix) *Matrix {
 	//r, c := m.Dims();
 	//o := NewMatrix(r, c, nil);
-	m.ScaleDown(s);
+	m.Scale(s);
 	return m;
 }
 
