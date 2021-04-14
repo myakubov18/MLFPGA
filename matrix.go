@@ -205,7 +205,10 @@ func MultiplyFixed(a, b int64) int64{
 		v = v >>1;
 		bR = bR >> 1;
 	}
-	
+	if(isNegative)
+		res |= 0x8000000000000000
+	else
+		res &= 0x7FFFFFFFFFFFFFFF
 	return res
 }
 
