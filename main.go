@@ -66,7 +66,8 @@ func mnistTrain(net *Network) {
 			inputs := make([]int64, net.inputs);
 			for i := range inputs {
 				//inputs[i], _ = strconv.Atoi(record[i]);
-				inputs[i], _ = strconv.ParseInt(record[i],10,64);
+				//BIT SHIFTED HERE
+				inputs[i], _ = strconv.ParseInt(record[i],10,64) << 32;
 				//inputs[i] = (x / 255.0 * 9.99) + 0.01;
 				//inputs[i] = x + 1
 			}
@@ -112,7 +113,8 @@ func mnistPredict(net *Network) {
 				inputs[i] = 1;
 			}
 			//inputs[i], _ = strconv.Atoi(record[i]);
-			inputs[i], _ = strconv.ParseInt(record[i],10,64);
+			//BIT SHIFTED HERE
+			inputs[i], _ = strconv.ParseInt(record[i],10,64) << 32;
 			//inputs[i] = (x / 255.0 * 9.99) + 0.01;
 		}
 		//fmt.Println("inputs: ", inputs);
