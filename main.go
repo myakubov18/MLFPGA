@@ -5,7 +5,7 @@ import (
 	"bytes"
 	"encoding/base64"
 	"encoding/csv"
-//	"flag"
+	"flag"
 	"fmt"
 	"image"
 	"image/png"

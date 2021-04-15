@@ -59,18 +59,18 @@ func (net *Network) Train(inputData []int64, targetData []int64) {
 
 	inputs = NewMatrix(len(inputData), 1, inputData);
 	//fmt.Println("Inputs: ", inputs.row, " ", inputs.col);
-	fmt.Println("Inputs: ", inputs);
-	//fmt.Println("hiddenWeights: ", net.hiddenWeights);
+	fmt.Println("\nInputs: ", inputs);
+	//fmt.Println("\nhiddenWeights: ", net.hiddenWeights);
 	//fmt.Println("hiddenWeights: ", net.hiddenWeights.row, " ", net.hiddenWeights.col);
 	hiddenInputs = scale(1, dot(net.hiddenWeights, inputs));
 	//fmt.Println("hiddenInputs: ", hiddenInputs.row, " ", hiddenInputs.col);
-	fmt.Println(hiddenInputs);
+	fmt.Println("\nHidden Inputs: ", hiddenInputs);
 
 	hiddenOutputs = apply(sigmoid, hiddenInputs);
 
 	finalInputs = scale(1, dot(net.outputWeights, hiddenOutputs));
 
-	fmt.Println("finalInputs: ", finalInputs);
+	fmt.Println("\nfinalInputs: ", finalInputs);
 	finalOutputs = apply(sigmoid, finalInputs);
 
 	// find errors
@@ -139,14 +139,14 @@ func sigmoidPrime(m *Matrix) *Matrix{
 
 //THIS IS THE ACTUAL SIGMOID BELOW
 
-/*
-func sigmoid(r, c int, z float64) float64 {
-	return 1.0 / (1 + math.Exp(-1*z))
+
+/*func sigmoid(r, c int, z int64) int64 {
+	return 1 / (1 + math.Exp(-1*z))
 }
 
 func sigmoidPrime(m *Matrix) *Matrix {
 	rows, _ := m.Dims()
-	o := make([]float64, rows)
+	o := make([]int64, rows)
 	for i := range o {
 		o[i] = 1
 	}
@@ -245,7 +245,7 @@ func randomArray(size int, v int64) (data []int64) {
 	data = make([]int64, size);
 	for i := 0; i < size; i++ {
 		// data[i] = rand.NormFloat64() * math.Pow(v, -0.5)
-		data[i] = int64(rand.Intn(1000000));
+		data[i] = rand.Int63n(0x1000000000);
 	}
 	return;
 }
