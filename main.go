@@ -14,6 +14,12 @@ import (
 	"os"
 	"strconv"
 	"time"
+	//"golang.org/x/exp/rand"
+	"gonum.org/v1/plot"
+	"gonum.org/v1/plot/plotter"
+	"gonum.org/v1/plot/plotutil"
+	"gonum.org/v1/plot/vg"
+	//"gonum.org/v1/plot/vg/draw"
 )
 
 func main() {
@@ -39,6 +45,7 @@ func main() {
 		// don't do anything
 	}
 
+	
 	// predict individual digit images
 	if *file != "" {
 		// print the image out nicely on the terminal
@@ -53,6 +60,8 @@ func main() {
 func mnistTrain(net *Network) {
 	rand.Seed(time.Now().UTC().UnixNano());
 	t1 := time.Now();
+	minWeights := []int64 {};
+	maxWeights := []int64 {};
 	//fmt.Println("\n\nHidden Weights: ", net.hiddenWeights.At(0,500), "\n\n");
 	for epochs := 0; epochs < 1; epochs++ {
 		testFile, _ := os.Open("mnist_dataset/mnist_train_1000.csv");
@@ -67,7 +76,8 @@ func mnistTrain(net *Network) {
 			for i := range inputs {
 				//inputs[i], _ = strconv.Atoi(record[i]);
 				//BIT SHIFTED HERE
-				inputs[i], _ = strconv.ParseInt(record[i],10,64) << 32;
+				inputs[i], _ = strconv.ParseInt(record[i],10,64);
+				inputs[i] = inputs[i] << 32;
 				//inputs[i] = (x / 255.0 * 9.99) + 0.01;
 				//inputs[i] = x + 1
 			}
@@ -83,13 +93,51 @@ func mnistTrain(net *Network) {
 			targets[x] = 255;
 			//fmt.Println("Hidden Weights: ", net.hiddenWeights.At(0,500), "\n");
 			net.Train(inputs, targets);
+			maxWeights = append(maxWeights, net.hiddenWeights.max);
+			minWeights = append(minWeights, net.hiddenWeights.min);
 			//fmt.Println("Hidden Weights: ", net.hiddenWeights.At(0,500), "\n");
 		}
 		//fmt.Println("Epoch ", epochs, "\n\n", net.hiddenWeights);
 		testFile.Close();
 	}
 	elapsed := time.Since(t1);
+
 	fmt.Printf("\nTime taken to train: %s\n", elapsed);
+	fmt.Println("maxWeights: ", maxWeights);
+	fmt.Println("minWeights: ", minWeights);
+	maxPlot := plot.New();
+	minPlot := plot.New();
+	maxPlot.Title.Text = "Weights Graph";
+	maxPlot.X.Label.Text = "Iterations";
+	maxPlot.Y.Label.Text = "Magnitude";
+	minPlot.Title.Text = "Weights Graph";
+	minPlot.X.Label.Text = "Iterations";
+	minPlot.Y.Label.Text = "Magnitude";
+	//myPlot.Y.Scale = plot.LogScale{}
+
+	maxPoints := make(plotter.XYs, len(maxWeights));
+	minPoints := make(plotter.XYs, len(minWeights));
+	for i:=0; i<len(maxWeights); i++{
+		maxPoints[i].X = float64(i);
+		maxPoints[i].Y = float64(maxWeights[i]);
+		minPoints[i].X = float64(i);
+		minPoints[i].Y = float64(minWeights[i]);
+	}
+	err := plotutil.AddLinePoints(maxPlot, "Max Weights", maxPoints);
+	if err != nil{
+		panic(err);
+	}
+	if err := maxPlot.Save(4*vg.Inch, 4*vg.Inch, "maxWeightsPlot.png"); err != nil {
+		panic(err)
+	}
+	err = plotutil.AddLinePoints(minPlot, "Min Weights", minPoints);
+	if err != nil{
+		panic(err);
+	}
+	if err := minPlot.Save(4*vg.Inch, 4*vg.Inch, "minWeightsPlot.png"); err != nil {
+		panic(err)
+	}
+	//maxPlot := plotter();
 	//fmt.Println("Weights: ", net.hiddenWeights)
 	//fmt.Println("\noutputWeights: ", net.outputWeights)
 }
@@ -114,7 +162,8 @@ func mnistPredict(net *Network) {
 			}
 			//inputs[i], _ = strconv.Atoi(record[i]);
 			//BIT SHIFTED HERE
-			inputs[i], _ = strconv.ParseInt(record[i],10,64) << 32;
+			inputs[i], _ = strconv.ParseInt(record[i],10,64);
+			inputs[i] = inputs[i] << 32;
 			//inputs[i] = (x / 255.0 * 9.99) + 0.01;
 		}
 		//fmt.Println("inputs: ", inputs);

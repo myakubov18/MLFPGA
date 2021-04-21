@@ -164,6 +164,9 @@ func Product(a, b *Matrix) *Matrix{
 	}
 	newData := make([]int64, ar*bc);
 	m := NewMatrix(ar,bc,newData)
+
+	//fmt.Println(m.min, "\t", m.max);
+	m.min = int64(^uint64(0)>>1);
 	for i := 0; i < ar; i++ {
 		for j := 0; j < bc; j++ {
 			var sum int64 = 0

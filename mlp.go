@@ -58,21 +58,20 @@ func (net *Network) Train(inputData []int64, targetData []int64) {
 	var hiddenErrors *Matrix;
 
 	inputs = NewMatrix(len(inputData), 1, inputData);
-	//fmt.Println("Inputs: ", inputs.row, " ", inputs.col);
-	fmt.Println("\nInputs: ", inputs);
-	//fmt.Println("\nhiddenWeights: ", net.hiddenWeights);
-	//fmt.Println("hiddenWeights: ", net.hiddenWeights.row, " ", net.hiddenWeights.col);
-	hiddenInputs = scale(1, dot(net.hiddenWeights, inputs));
-	//fmt.Println("hiddenInputs: ", hiddenInputs.row, " ", hiddenInputs.col);
-	fmt.Println("\nHidden Inputs: ", hiddenInputs);
+	//fmt.Println("\nInputs: ", inputs);
+
+	//fmt.Println("\nhiddenWeights: ", net.hiddenWeights, "\n\n\n");
+	hiddenInputs = dot(net.hiddenWeights, inputs);
+	//fmt.Println("\nHidden Inputs: ", hiddenInputs);
 
 	hiddenOutputs = apply(sigmoid, hiddenInputs);
+	//fmt.Println("\nHidden Outputs: ", hiddenOutputs);
 
-	finalInputs = scale(1, dot(net.outputWeights, hiddenOutputs));
+	finalInputs = dot(net.outputWeights, hiddenOutputs);
+	//fmt.Println("\nfinalInputs: ", finalInputs);
 
-	fmt.Println("\nfinalInputs: ", finalInputs);
 	finalOutputs = apply(sigmoid, finalInputs);
-
+	//fmt.Println("\nfinalOutputs: ", finalOutputs);
 	// find errors
 	//targets := *Matrix(len(targetData), 1, targetData);
 	outputErrors = subtract(NewMatrix(len(targetData), 1, targetData), finalOutputs);
@@ -141,7 +140,7 @@ func sigmoidPrime(m *Matrix) *Matrix{
 
 
 /*func sigmoid(r, c int, z int64) int64 {
-	return 1 / (1 + math.Exp(-1*z))
+	return 1 / (1 + math.Exp(-1*z)
 }
 
 func sigmoidPrime(m *Matrix) *Matrix {
@@ -245,7 +244,7 @@ func randomArray(size int, v int64) (data []int64) {
 	data = make([]int64, size);
 	for i := 0; i < size; i++ {
 		// data[i] = rand.NormFloat64() * math.Pow(v, -0.5)
-		data[i] = rand.Int63n(0x1000000000);
+		data[i] = rand.Int63n(0x100000000);
 	}
 	return;
 }
