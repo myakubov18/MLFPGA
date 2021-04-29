@@ -26,8 +26,8 @@ func main() {
 	// 784 inputs - 28 x 28 pixels, each pixel is an input
 	// 100 hidden nodes - an arbitrary number
 	// 10 outputs - digits 0 to 9
-	// 1/128 is the learning rate
-	net := CreateNetwork(784, 100, 10, 0x2000000, 1);
+	// 1/256 is the learning rate
+	net := CreateNetwork(784, 100, 10, 0x0200000000000000, 1);
 
 	mnist := flag.String("mnist", "", "Either train or predict to evaluate neural network");
 	file := flag.String("file", "", "File name of 28 x 28 PNG file to evaluate");
@@ -62,6 +62,8 @@ func mnistTrain(net *Network) {
 	t1 := time.Now();
 	minWeights := []int64 {};
 	maxWeights := []int64 {};
+	numWeightsDisplay := 100;
+	firstFewWeights := make([][]int64, numWeightsDisplay);
 	//fmt.Println("\n\nHidden Weights: ", net.hiddenWeights.At(0,500), "\n\n");
 	for epochs := 0; epochs < 1; epochs++ {
 		testFile, _ := os.Open("mnist_dataset/mnist_train_1000.csv");
@@ -86,15 +88,20 @@ func mnistTrain(net *Network) {
 			targets := make([]int64, net.outputs);
 			for i := range targets {
 				//targets[i] = 0.01;
-				targets[i] = 1;
+				targets[i] = 1 << 32;
 
 			}
 			x, _ := strconv.Atoi(record[0]);
-			targets[x] = 255;
+			targets[x] = 255 << 32;
 			//fmt.Println("Hidden Weights: ", net.hiddenWeights.At(0,500), "\n");
+			//fmt.Println("--------------------------------------");
 			net.Train(inputs, targets);
 			maxWeights = append(maxWeights, net.hiddenWeights.max);
 			minWeights = append(minWeights, net.hiddenWeights.min);
+			for i:=0; i<numWeightsDisplay; i++{
+				firstFewWeights[i] = append(firstFewWeights[i], net.hiddenWeights.data[i][i])
+			}
+
 			//fmt.Println("Hidden Weights: ", net.hiddenWeights.At(0,500), "\n");
 		}
 		//fmt.Println("Epoch ", epochs, "\n\n", net.hiddenWeights);
@@ -103,43 +110,42 @@ func mnistTrain(net *Network) {
 	elapsed := time.Since(t1);
 
 	fmt.Printf("\nTime taken to train: %s\n", elapsed);
-	fmt.Println("maxWeights: ", maxWeights);
-	fmt.Println("minWeights: ", minWeights);
-	maxPlot := plot.New();
-	minPlot := plot.New();
-	maxPlot.Title.Text = "Weights Graph";
-	maxPlot.X.Label.Text = "Iterations";
-	maxPlot.Y.Label.Text = "Magnitude";
-	minPlot.Title.Text = "Weights Graph";
-	minPlot.X.Label.Text = "Iterations";
-	minPlot.Y.Label.Text = "Magnitude";
-	//myPlot.Y.Scale = plot.LogScale{}
+	//fmt.Println("maxWeights: ", maxWeights);
+	//fmt.Println("minWeights: ", minWeights);
 
-	maxPoints := make(plotter.XYs, len(maxWeights));
-	minPoints := make(plotter.XYs, len(minWeights));
-	for i:=0; i<len(maxWeights); i++{
-		maxPoints[i].X = float64(i);
-		maxPoints[i].Y = float64(maxWeights[i]);
-		minPoints[i].X = float64(i);
-		minPoints[i].Y = float64(minWeights[i]);
+	//plotWeights("Weights Graph", "Iterations", "Magnitude", [maxWeights], "Max Weights", "maxWeightsPlot.png");
+	//plotWeights("Weights Graph", "Iterations", "Magnitude", [minWeights], "Min Weights", "minWeightsPlot.png");
+	maxOut := [][]int64 {maxWeights};
+	minOut := [][]int64 {minWeights};
+	plotWeights("Weights Graph", "Iterations", "Magnitude", firstFewWeights, "weight", "weightGraphs/");
+	plotWeights("Weights Graph", "Iterations", "Magnitude", maxOut, "maxWeight", "weightGraphs/");
+	plotWeights("Weights Graph", "Iterations", "Magnitude", minOut, "minWeight", "weightGraphs/");
+}
+
+func plotWeights(title string, xlabel string, ylabel string, data [][]int64, dataName string, filename string){
+	
+
+	for dataLine:=0; dataLine<len(data); dataLine++{
+		newPlot := plot.New();
+		newPlot.Title.Text = title;
+		newPlot.X.Label.Text = xlabel;
+		newPlot.Y.Label.Text = ylabel;
+		//newPlot.Y.Scale = plot.LogScale{};
+		dataSet := data[dataLine]
+		points := make(plotter.XYs, len(dataSet));
+		for i:=0; i<len(dataSet); i++ {
+			points[i].X = float64(i);
+			points[i].Y = float64(dataSet[i]);
+		}
+		newName := dataName + strconv.Itoa(dataLine);
+		err := plotutil.AddLinePoints(newPlot, newName, points);
+		if err != nil{
+			panic(err);
+		}
+		if err := newPlot.Save(4*vg.Inch, 4*vg.Inch, filename+dataName+strconv.Itoa(dataLine)+".png"); err != nil {
+			panic(err)
+		}
 	}
-	err := plotutil.AddLinePoints(maxPlot, "Max Weights", maxPoints);
-	if err != nil{
-		panic(err);
-	}
-	if err := maxPlot.Save(4*vg.Inch, 4*vg.Inch, "maxWeightsPlot.png"); err != nil {
-		panic(err)
-	}
-	err = plotutil.AddLinePoints(minPlot, "Min Weights", minPoints);
-	if err != nil{
-		panic(err);
-	}
-	if err := minPlot.Save(4*vg.Inch, 4*vg.Inch, "minWeightsPlot.png"); err != nil {
-		panic(err)
-	}
-	//maxPlot := plotter();
-	//fmt.Println("Weights: ", net.hiddenWeights)
-	//fmt.Println("\noutputWeights: ", net.outputWeights)
 }
 
 func mnistPredict(net *Network) {
@@ -158,7 +164,7 @@ func mnistPredict(net *Network) {
 		inputs := make([]int64, net.inputs);
 		for i := range inputs {
 			if i == 0 {
-				inputs[i] = 1;
+				inputs[i] = 1 << 32;
 			}
 			//inputs[i], _ = strconv.Atoi(record[i]);
 			//BIT SHIFTED HERE
@@ -180,7 +186,7 @@ func mnistPredict(net *Network) {
 			}
 		}
 		target, _ := strconv.Atoi(record[0]);
-		fmt.Println("Predicted: ", best, 	"... Target: ", target);
+		//fmt.Println("Predicted: ", best, 	"... Target: ", target);
 		if best == target {
 			//fmt.Println("Predicted: ", best);
 			score++;

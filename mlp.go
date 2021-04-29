@@ -77,11 +77,22 @@ func (net *Network) Train(inputData []int64, targetData []int64) {
 	outputErrors = subtract(NewMatrix(len(targetData), 1, targetData), finalOutputs);
 	hiddenErrors = dot(net.outputWeights.T(), outputErrors);
 
+	/*for i:=0; i< net.outputWeights.row; i++{
+		for j:= 0; j<net.outputWeights.col; j++{
+			if (net.outputWeights.At(i,j)<=0){
+				fmt.Println(net.outputWeights.At(i,j));
+			}
+		}
+	}*/
+	//fmt.Println("Output Weights: ", net.outputWeights , "\n");
+
 	// backpropagate
 	net.outputWeights = add(net.outputWeights,
 		scale(net.learningRate,
 			dot(multiply(outputErrors, sigmoidPrime(finalOutputs)),
 				hiddenOutputs.T())));
+
+	//subtract)(
 
 	net.hiddenWeights = add(net.hiddenWeights,
 		scale(net.learningRate,
@@ -101,11 +112,11 @@ func (net Network) Predict(inputData []int64) *Matrix {
 	inputs = NewMatrix(len(inputData), 1, inputData);
 	//biasedInputs := addBiasNodeTo(inputs, 1);
 	//fmt.Println("Inputs: ", inputs);
-	hiddenInputs = scale(net.scalingFactor, dot(net.hiddenWeights, inputs));
+	hiddenInputs = dot(net.hiddenWeights, inputs);
 	//fmt.Println("hiddenInputs: ", hiddenInputs);
 	hiddenOutputs = apply(sigmoid, hiddenInputs);
 	//fmt.Println("hiddenOutputs: ", hiddenOutputs);
-	finalInputs = scale(net.scalingFactor, dot(net.outputWeights, hiddenOutputs));
+	finalInputs = dot(net.outputWeights, hiddenOutputs);
 	//fmt.Println("finalInputs: ", finalInputs);
 	finalOutputs = apply(sigmoid, finalInputs);
 	//fmt.Println("finalOutputs: ", finalOutputs);
@@ -153,6 +164,7 @@ func sigmoidPrime(m *Matrix) *Matrix {
 	ones := mat.NewDense(rows, 1, o)
 	return multiply(m, subtract(ones, m)) // m * (1 - m)
 }*/
+
 
 //
 // Helper functions to allow easier use of Gonum
