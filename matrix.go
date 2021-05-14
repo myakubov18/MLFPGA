@@ -241,23 +241,139 @@ func MultiplyFixed(a, b int64) int64{
     b = -b
     isNegative = !isNegative
   }
-    bL := b >> 32
-    res := a * bL
-    bR := int64(Reverse64(uint64(b)) >> 32)
-    v:=a>> 1;
-    for i:=0; i < 32; i++ {
-        if bR% 2 == 1{
-            res += v
-        }
-        v = v >>1;
-        bR = bR >> 1;
-    }
+  //((A+B) * (C+D) = (A*C) + (C*B) + (A*D) + (B*D)
+
+  //A*C
+  al := a >> 32
+  bl := b >> 32
+  res := (al * bl) << 32
+
+  ar := a & 0xffffffff
+  br := b & 0xffffffff
+
+  //C*B
+  res += (bl * ar)
+
+  //A*D
+  res += (al * br)
+
+  //B*D
+  res += ((ar>>16) * (br>> 16))
     if(isNegative && res >= 0) {
     res = -res
     }    else if(!isNegative && res < 0) {
     res = -res
     }
     return res
+}
+
+func DivideFixed(a, b int64) int64{
+  var isNegative bool = false;
+    if(a < 0){
+    a = -a
+    isNegative = !isNegative
+  }
+    if(b < 0){
+    b = -b
+    isNegative = !isNegative
+  }
+  if(b == (b>>32)<<32){
+    return a / (b>>32)
+  }
+  res := (a / (b >> 16)) << 16
+  if(isNegative && res >= 0) {
+    res = -res
+    }    else if(!isNegative && res < 0) {
+    res = -res
+    }
+    return res
+}
+
+func scale_2(x int64, n int64)int64{
+  var running int64 = 1
+  var i int64
+  for i = 0; i < n; i++ {
+      running *= 2
+  }
+  return x * running
+}
+
+func abs(x int64)int64{
+  if x < 0{
+    return -x
+  }
+  return x
+}
+
+func toInt(x int64)int64{
+  var isNegative = x < 0
+  x = abs(x)
+  x = x >> 32
+  if isNegative{
+    x = -x
+  }
+  return x
+}
+
+const LN2 int64 = 0xB17217F8
+const LN2_H int64 = 0xB17217F7
+const LN2_L int64 = 0x1
+
+const INV_LN2 int64 = 0x171547653
+const INT_LN2_H int64 = 0x171547600
+const INT_LN2_L int64 = 0x52
+
+const ONE_HALF int64 = 0x80000000
+const ONE int64 = 0x100000000
+const TWO int64 = 0x200000000
+
+const P1 int64 = 0x2AAAAAAB
+const P2 int64 = -0x00B60B61
+const P3 int64 = 0x0004559B
+const P4 int64 = -0x00001BBD
+const P5 int64 = 0x000000B2
+
+func exp(x int64)int64{
+  var hi int64
+  var lo int64
+  var k int64
+  var t int64 = abs(x);
+  if(t > LN2 / 2){
+    if(t < MultiplyFixed(ONE_HALF + ONE, LN2)){
+      hi = t - LN2_H
+      lo = LN2_L
+      k = 1
+    } else {
+      k = toInt((MultiplyFixed(INV_LN2, t) + ONE_HALF))
+      k_fixed := k << 32
+      hi = t - MultiplyFixed(k_fixed, LN2_H)
+      lo = MultiplyFixed(k_fixed, LN2_L)
+    }
+    if(x < 0){
+      hi = -hi
+      lo = -lo
+      k = -k
+    }
+    x = hi - lo
+  } else if(t < 0x10){
+    return 0x1 << 32
+  } else{
+    lo = 0
+    hi = 0
+    k = 0
+  }
+  //now x is in primary range.
+  t = MultiplyFixed(x, x)
+  P4_5 := P4 + MultiplyFixed(t, P5)
+  P3_5 := P3 + MultiplyFixed(t, P4_5)
+  P2_5 := P2 + MultiplyFixed(t, P3_5)
+  P1_5 := P1 + MultiplyFixed(t, P2_5)
+  c := x - MultiplyFixed(t, P1_5)
+  if k == 0 {
+    return ONE - (lo - DivideFixed(MultiplyFixed(x , c), TWO - c) - x)
+  }
+  y := ONE - (lo - DivideFixed(MultiplyFixed(x , c), TWO - c) - hi) 
+  return scale_2(y, k)
 }
 
 func intToFixed(a int) int64{

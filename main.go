@@ -27,7 +27,7 @@ func main() {
 	// 100 hidden nodes - an arbitrary number
 	// 10 outputs - digits 0 to 9
 	// 1/256 is the learning rate
-	net := CreateNetwork(784, 100, 10, 0x0200000000000000, 1);
+	net := CreateNetwork(784, 100, 10, 0x02000000, 1);
 
 	mnist := flag.String("mnist", "", "Either train or predict to evaluate neural network");
 	file := flag.String("file", "", "File name of 28 x 28 PNG file to evaluate");
@@ -62,9 +62,10 @@ func mnistTrain(net *Network) {
 	t1 := time.Now();
 	minWeights := []int64 {};
 	maxWeights := []int64 {};
-	numWeightsDisplay := 100;
+	numWeightsDisplay := net.hiddens;
 	firstFewWeights := make([][]int64, numWeightsDisplay);
 	//fmt.Println("\n\nHidden Weights: ", net.hiddenWeights.At(0,500), "\n\n");
+	sample := 0;
 	for epochs := 0; epochs < 1; epochs++ {
 		testFile, _ := os.Open("mnist_dataset/mnist_train_1000.csv");
 		r := csv.NewReader(bufio.NewReader(testFile));
@@ -95,11 +96,14 @@ func mnistTrain(net *Network) {
 			targets[x] = 255 << 32;
 			//fmt.Println("Hidden Weights: ", net.hiddenWeights.At(0,500), "\n");
 			//fmt.Println("--------------------------------------");
+			//fmt.Println(targets);
+			fmt.Println("Data Sample: ", sample)
+			sample++;
 			net.Train(inputs, targets);
 			maxWeights = append(maxWeights, net.hiddenWeights.max);
 			minWeights = append(minWeights, net.hiddenWeights.min);
 			for i:=0; i<numWeightsDisplay; i++{
-				firstFewWeights[i] = append(firstFewWeights[i], net.hiddenWeights.data[i][i])
+				firstFewWeights[i] = append(firstFewWeights[i], net.outputWeights.data[5][i])
 			}
 
 			//fmt.Println("Hidden Weights: ", net.hiddenWeights.At(0,500), "\n");
@@ -108,6 +112,10 @@ func mnistTrain(net *Network) {
 		testFile.Close();
 	}
 	elapsed := time.Since(t1);
+
+	//fmt.Println("Hidden Weights: ", net.outputWeights, "\n");
+	//Sort by MIN/MAX range, plot the ones that go to 0.
+
 
 	fmt.Printf("\nTime taken to train: %s\n", elapsed);
 	//fmt.Println("maxWeights: ", maxWeights);
@@ -150,10 +158,10 @@ func plotWeights(title string, xlabel string, ylabel string, data [][]int64, dat
 
 func mnistPredict(net *Network) {
 	t1 := time.Now();
-	checkFile, _ := os.Open("mnist_dataset/mnist_test.csv");
+	checkFile, _ := os.Open("mnist_dataset/mnist_test_1000.csv");
 	//checkFile, _ := os.Open("mnist_dataset/mnist_test.csv");
 	defer checkFile.Close();
-
+	//fmt.Println("\nhiddenWeights: ", net.outputWeights, "\n");
 	score := 0;
 	r := csv.NewReader(bufio.NewReader(checkFile));
 	for {
@@ -177,6 +185,7 @@ func mnistPredict(net *Network) {
 		//fmt.Println("outputs: ", outputs)
 		best := 0;
 		var highest int64 = 0;
+		fmt.Println(outputs);
 		for i := 0; i < net.outputs; i++ {
 			//fmt.Println("%T\n", outputs);
 			//fmt.Println(type());
@@ -186,7 +195,7 @@ func mnistPredict(net *Network) {
 			}
 		}
 		target, _ := strconv.Atoi(record[0]);
-		//fmt.Println("Predicted: ", best, 	"... Target: ", target);
+		fmt.Println("Predicted: ", best, "... Target: ", target);
 		if best == target {
 			//fmt.Println("Predicted: ", best);
 			score++;

@@ -71,11 +71,25 @@ func (net *Network) Train(inputData []int64, targetData []int64) {
 	//fmt.Println("\nfinalInputs: ", finalInputs);
 
 	finalOutputs = apply(sigmoid, finalInputs);
-	//fmt.Println("\nfinalOutputs: ", finalOutputs);
+	fmt.Println("\nfinalOutputs: ", finalOutputs);
 	// find errors
 	//targets := *Matrix(len(targetData), 1, targetData);
 	outputErrors = subtract(NewMatrix(len(targetData), 1, targetData), finalOutputs);
 	hiddenErrors = dot(net.outputWeights.T(), outputErrors);
+
+	//fmt.Println("\ntargetData: ", targetData);
+	/*best := 0;
+	var highest int64 = 0;
+	for i := 0; i < finalOutputs; i++ {
+			//fmt.Println("%T\n", outputs);
+			//fmt.Println(type());
+		if outputs.At(i, 0) > highest {
+			best = i;
+			highest = outputs.At(i, 0);
+		}
+	}
+	target, _ := strconv.Atoi(record[0]);
+	fmt.Println("Predicted: ", best, 	"... Target: ", target);*/
 
 	/*for i:=0; i< net.outputWeights.row; i++{
 		for j:= 0; j<net.outputWeights.col; j++{
@@ -92,7 +106,7 @@ func (net *Network) Train(inputData []int64, targetData []int64) {
 			dot(multiply(outputErrors, sigmoidPrime(finalOutputs)),
 				hiddenOutputs.T())));
 
-	//subtract)(
+	//outputErrors*w1*x
 
 	net.hiddenWeights = add(net.hiddenWeights,
 		scale(net.learningRate,
@@ -126,7 +140,7 @@ func (net Network) Predict(inputData []int64) *Matrix {
 //REPLACED SIGMOID WITH RELU THIS IS ACTUALLY RELU WE WERE JUST LAZY
 
 
-func sigmoid(r, c int, z int64) int64{
+/*func sigmoid(r, c int, z int64) int64{
     if z > 0 {
         return z;
     }else{
@@ -145,15 +159,33 @@ func relu2(r, c int, z int64) int64{
 func sigmoidPrime(m *Matrix) *Matrix{
     //x := apply(relu2, m);
     return apply(relu2, m);
-}
+}*/
 
 //THIS IS THE ACTUAL SIGMOID BELOW
 
+//Fixed point Sigmoid
+func sigmoid(r, c int, z int64) int64{
+	var num int64 = 1 << 32;
+	var denom int64 = (1 << 32) + exp(MultiplyFixed(-1 << 32, z));
+	return DivideFixed(num, denom);
+}
+//Fixed point Sigmoid'
+func sigmoidPrime(m *Matrix) *Matrix {
+	rows, _ := m.Dims();
+	o := make([]int64, rows);
+	for i := range o {
+		o[i] = 1;
+	}
+	ones := NewMatrix(rows,1,o);
+	return multiply(m,subtract(ones,m)) //m * (1-m) 
+}
 
+//Regular Sigmoid
 /*func sigmoid(r, c int, z int64) int64 {
 	return 1 / (1 + math.Exp(-1*z)
 }
 
+//Regular Sigmoid'
 func sigmoidPrime(m *Matrix) *Matrix {
 	rows, _ := m.Dims()
 	o := make([]int64, rows)
@@ -342,8 +374,10 @@ func load(net *Network){
 	testFile, _ := os.Open("data/hweights.csv");
 	r := csv.NewReader(bufio.NewReader(testFile));
 	hweights := make([]int64, net.hiddens*net.inputs);
+	rowCount := 0;
 	for {
 			record, err := r.Read();
+			//fmt.Println(record);
 			if err == io.EOF {
 				break;
 			}
@@ -351,8 +385,9 @@ func load(net *Network){
 			for i := range record {
 				//hweights[i] = make([]int, net.inputs)
 				//fmt.Println(i);
-				hweights[i], _ = strconv.ParseInt(record[i],10,64);
+				hweights[rowCount*net.inputs + i], _ = strconv.ParseInt(record[i],10,64);
 			}
+			rowCount = rowCount+1;
 		}
 		testFile.Close();
 	//fmt.println(hweights);
@@ -361,7 +396,8 @@ func load(net *Network){
 
 	testFile, _ = os.Open("data/oweights.csv");
 	r = csv.NewReader(bufio.NewReader(testFile));
-	oweights := make([]int64, net.outputs*net.inputs);
+	oweights := make([]int64, net.outputs*net.hiddens);
+	rowCount = 0;
 	for {
 			record, err := r.Read();
 			if err == io.EOF {
@@ -369,8 +405,9 @@ func load(net *Network){
 			}
 
 			for i := range record {
-				oweights[i], _ = strconv.ParseInt(record[i],10,64);
+				oweights[rowCount*net.hiddens + i], _ = strconv.ParseInt(record[i],10,64);
 			}
+			rowCount = rowCount+1;
 		}
 		testFile.Close();
 
