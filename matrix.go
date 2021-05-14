@@ -290,12 +290,15 @@ func DivideFixed(a, b int64) int64{
 }
 
 func scale_2(x int64, n int64)int64{
-  var running int64 = 1
   var i int64
-  for i = 0; i < n; i++ {
-      running *= 2
+  for i = 0; i < abs(n); i++ {
+      if(n < 0) {
+        x /= 2
+      } else {
+        x *= 2
+      }
   }
-  return x * running
+  return x
 }
 
 func abs(x int64)int64{
