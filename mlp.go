@@ -64,14 +64,14 @@ func (net *Network) Train(inputData []int64, targetData []int64) {
 	hiddenInputs = dot(net.hiddenWeights, inputs);
 	//fmt.Println("\nHidden Inputs: ", hiddenInputs);
 
-	hiddenOutputs = apply(sigmoid, hiddenInputs);
+	hiddenOutputs = apply(linearPW, hiddenInputs);
 	//fmt.Println("\nHidden Outputs: ", hiddenOutputs);
 
 	finalInputs = dot(net.outputWeights, hiddenOutputs);
 	//fmt.Println("\nfinalInputs: ", finalInputs);
 
-	finalOutputs = apply(sigmoid, finalInputs);
-	fmt.Println("\nfinalOutputs: ", finalOutputs);
+	finalOutputs = apply(linearPW, finalInputs);
+	//fmt.Println("\nfinalOutputs: ", finalOutputs);
 	// find errors
 	//targets := *Matrix(len(targetData), 1, targetData);
 	outputErrors = subtract(NewMatrix(len(targetData), 1, targetData), finalOutputs);
@@ -103,14 +103,14 @@ func (net *Network) Train(inputData []int64, targetData []int64) {
 	// backpropagate
 	net.outputWeights = add(net.outputWeights,
 		scale(net.learningRate,
-			dot(multiply(outputErrors, sigmoidPrime(finalOutputs)),
+			dot(multiply(outputErrors, linearPW_prime(finalOutputs)),
 				hiddenOutputs.T())));
 
 	//outputErrors*w1*x
 
 	net.hiddenWeights = add(net.hiddenWeights,
 		scale(net.learningRate,
-			dot(multiply(hiddenErrors, sigmoidPrime(hiddenOutputs)),
+			dot(multiply(hiddenErrors, linearPW_prime(hiddenOutputs)),
 				inputs.T())));
 }
 
@@ -128,11 +128,11 @@ func (net Network) Predict(inputData []int64) *Matrix {
 	//fmt.Println("Inputs: ", inputs);
 	hiddenInputs = dot(net.hiddenWeights, inputs);
 	//fmt.Println("hiddenInputs: ", hiddenInputs);
-	hiddenOutputs = apply(sigmoid, hiddenInputs);
+	hiddenOutputs = apply(linearPW, hiddenInputs);
 	//fmt.Println("hiddenOutputs: ", hiddenOutputs);
 	finalInputs = dot(net.outputWeights, hiddenOutputs);
 	//fmt.Println("finalInputs: ", finalInputs);
-	finalOutputs = apply(sigmoid, finalInputs);
+	finalOutputs = apply(linearPW, finalInputs);
 	//fmt.Println("finalOutputs: ", finalOutputs);
 	return finalOutputs;
 }
@@ -140,7 +140,30 @@ func (net Network) Predict(inputData []int64) *Matrix {
 //REPLACED SIGMOID WITH RELU THIS IS ACTUALLY RELU WE WERE JUST LAZY
 
 
-/*func sigmoid(r, c int, z int64) int64{
+func linearPW(r, c int, z int64) int64{
+	if z < -(4 << 32) {
+		return 0;
+	}else if z > (4 << 32){
+		return (1 << 32);
+	}else{
+		return (0x80000000 + MultiplyFixed(0x20000000,z))
+	}
+}
+
+func linearPW2(r, c int, z int64) int64 {
+	if z > (4 << 32){
+		return 0;
+	}else if z < -(4 << 32){
+		return 0;
+	}
+	return 0x20000000;
+}
+
+func linearPW_prime(m *Matrix) *Matrix{
+	return apply(linearPW2, m);
+}
+
+func relu(r, c int, z int64) int64{
     if z > 0 {
         return z;
     }else{
@@ -156,10 +179,10 @@ func relu2(r, c int, z int64) int64{
     }
 }
 
-func sigmoidPrime(m *Matrix) *Matrix{
+func reluPrime(m *Matrix) *Matrix{
     //x := apply(relu2, m);
     return apply(relu2, m);
-}*/
+}
 
 //THIS IS THE ACTUAL SIGMOID BELOW
 

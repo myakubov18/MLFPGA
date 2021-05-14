@@ -66,8 +66,8 @@ func mnistTrain(net *Network) {
 	firstFewWeights := make([][]int64, numWeightsDisplay);
 	//fmt.Println("\n\nHidden Weights: ", net.hiddenWeights.At(0,500), "\n\n");
 	sample := 0;
-	for epochs := 0; epochs < 1; epochs++ {
-		testFile, _ := os.Open("mnist_dataset/mnist_train_1000.csv");
+	for epochs := 0; epochs < 5; epochs++ {
+		testFile, _ := os.Open("mnist_dataset/mnist_train.csv");
 		r := csv.NewReader(bufio.NewReader(testFile));
 		for {
 			record, err := r.Read();
@@ -80,7 +80,7 @@ func mnistTrain(net *Network) {
 				//inputs[i], _ = strconv.Atoi(record[i]);
 				//BIT SHIFTED HERE
 				inputs[i], _ = strconv.ParseInt(record[i],10,64);
-				inputs[i] = inputs[i] << 32;
+				inputs[i] = inputs[i] << 24;
 				//inputs[i] = (x / 255.0 * 9.99) + 0.01;
 				//inputs[i] = x + 1
 			}
@@ -89,15 +89,15 @@ func mnistTrain(net *Network) {
 			targets := make([]int64, net.outputs);
 			for i := range targets {
 				//targets[i] = 0.01;
-				targets[i] = 1 << 32;
+				targets[i] = 1 << 24;
 
 			}
 			x, _ := strconv.Atoi(record[0]);
-			targets[x] = 255 << 32;
+			targets[x] = 255 << 24;
 			//fmt.Println("Hidden Weights: ", net.hiddenWeights.At(0,500), "\n");
 			//fmt.Println("--------------------------------------");
 			//fmt.Println(targets);
-			fmt.Println("Data Sample: ", sample)
+			//fmt.Println("Data Sample: ", sample)
 			sample++;
 			net.Train(inputs, targets);
 			maxWeights = append(maxWeights, net.hiddenWeights.max);
@@ -123,11 +123,11 @@ func mnistTrain(net *Network) {
 
 	//plotWeights("Weights Graph", "Iterations", "Magnitude", [maxWeights], "Max Weights", "maxWeightsPlot.png");
 	//plotWeights("Weights Graph", "Iterations", "Magnitude", [minWeights], "Min Weights", "minWeightsPlot.png");
-	maxOut := [][]int64 {maxWeights};
-	minOut := [][]int64 {minWeights};
-	plotWeights("Weights Graph", "Iterations", "Magnitude", firstFewWeights, "weight", "weightGraphs/");
-	plotWeights("Weights Graph", "Iterations", "Magnitude", maxOut, "maxWeight", "weightGraphs/");
-	plotWeights("Weights Graph", "Iterations", "Magnitude", minOut, "minWeight", "weightGraphs/");
+	//maxOut := [][]int64 {maxWeights};
+	//minOut := [][]int64 {minWeights};
+	//plotWeights("Weights Graph", "Iterations", "Magnitude", firstFewWeights, "weight", "weightGraphs/");
+	//plotWeights("Weights Graph", "Iterations", "Magnitude", maxOut, "maxWeight", "weightGraphs/");
+	//plotWeights("Weights Graph", "Iterations", "Magnitude", minOut, "minWeight", "weightGraphs/");
 }
 
 func plotWeights(title string, xlabel string, ylabel string, data [][]int64, dataName string, filename string){
@@ -158,7 +158,7 @@ func plotWeights(title string, xlabel string, ylabel string, data [][]int64, dat
 
 func mnistPredict(net *Network) {
 	t1 := time.Now();
-	checkFile, _ := os.Open("mnist_dataset/mnist_test_1000.csv");
+	checkFile, _ := os.Open("mnist_dataset/mnist_test.csv");
 	//checkFile, _ := os.Open("mnist_dataset/mnist_test.csv");
 	defer checkFile.Close();
 	//fmt.Println("\nhiddenWeights: ", net.outputWeights, "\n");
@@ -172,12 +172,12 @@ func mnistPredict(net *Network) {
 		inputs := make([]int64, net.inputs);
 		for i := range inputs {
 			if i == 0 {
-				inputs[i] = 1 << 32;
+				inputs[i] = 1 << 24;
 			}
 			//inputs[i], _ = strconv.Atoi(record[i]);
 			//BIT SHIFTED HERE
 			inputs[i], _ = strconv.ParseInt(record[i],10,64);
-			inputs[i] = inputs[i] << 32;
+			inputs[i] = inputs[i] << 24;
 			//inputs[i] = (x / 255.0 * 9.99) + 0.01;
 		}
 		//fmt.Println("inputs: ", inputs);
@@ -185,7 +185,7 @@ func mnistPredict(net *Network) {
 		//fmt.Println("outputs: ", outputs)
 		best := 0;
 		var highest int64 = 0;
-		fmt.Println(outputs);
+		//fmt.Println(outputs);
 		for i := 0; i < net.outputs; i++ {
 			//fmt.Println("%T\n", outputs);
 			//fmt.Println(type());
@@ -195,7 +195,7 @@ func mnistPredict(net *Network) {
 			}
 		}
 		target, _ := strconv.Atoi(record[0]);
-		fmt.Println("Predicted: ", best, "... Target: ", target);
+		//fmt.Println("Predicted: ", best, "... Target: ", target);
 		if best == target {
 			//fmt.Println("Predicted: ", best);
 			score++;
