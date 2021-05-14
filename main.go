@@ -163,6 +163,7 @@ func mnistPredict(net *Network) {
 	defer checkFile.Close();
 	//fmt.Println("\nhiddenWeights: ", net.outputWeights, "\n");
 	score := 0;
+	samples := 0;
 	r := csv.NewReader(bufio.NewReader(checkFile));
 	for {
 		record, err := r.Read();
@@ -200,11 +201,12 @@ func mnistPredict(net *Network) {
 			//fmt.Println("Predicted: ", best);
 			score++;
 		}
+		samples++;
 	}
 
 	elapsed := time.Since(t1);
 	fmt.Printf("Time taken to check: %s\n", elapsed);
-	fmt.Println("score:", score);
+	fmt.Printf("score: %.2f%%", float64(score)*100/float64(samples));
 }
 
 // print out image on iTerm2; equivalent to imgcat on iTerm2
