@@ -16,16 +16,14 @@ type Network struct {
 	hiddenWeights *Matrix;
 	outputWeights *Matrix;
 	learningRate  int64;
-	scalingFactor int64;
 }
 
-func CreateNetwork(input, hidden, output int, rate int64, scale int64) (net Network) {
+func CreateNetwork(input, hidden, output int, rate int64) (net Network) {
 	net = Network{
 		inputs:       input,
 		hiddens:      hidden,
 		outputs:      output,
 		learningRate: rate,
-		scalingFactor: scale,
 	};
 	net.hiddenWeights = NewMatrix(net.hiddens, net.inputs, randomArray((net.inputs * net.hiddens), int64(net.inputs)));
 	net.outputWeights = NewMatrix(net.outputs, net.hiddens, randomArray((net.hiddens * net.outputs), int64(net.hiddens)));
@@ -36,16 +34,16 @@ func (net *Network) Train(inputData []int64, targetData []int64) {
     inputs := NewMatrix(len(inputData), 1, inputData);
 
     hiddenInputs := net.hiddenWeights.Product(inputs);
-    hiddenOutputs := hiddenInputs.Apply(linearPW);
+    hiddenOutputs := hiddenInputs.Apply(regionPW);
 
     finalInputs := net.outputWeights.Product(hiddenOutputs);
-    finalOutputs := finalInputs.Apply(linearPW);
+    finalOutputs := finalInputs.Apply(regionPW);
 
     outputErrors := NewMatrix(len(targetData),1,targetData).Sub(finalOutputs);
     hiddenErrors := net.outputWeights.T().Product(outputErrors);
 
-    net.outputWeights = net.outputWeights.Add(outputErrors.MulElem(finalOutputs.Apply(linearPW2)).Product(hiddenOutputs.T()).Scale(net.learningRate))
-    net.hiddenWeights = net.hiddenWeights.Add(hiddenErrors.MulElem(hiddenOutputs.Apply(linearPW2)).Product(inputs.T()).Scale(net.learningRate))
+    net.outputWeights = net.outputWeights.Add(outputErrors.MulElem(finalOutputs.Apply(regionPW2)).Product(hiddenOutputs.T()).Scale(net.learningRate))
+    net.hiddenWeights = net.hiddenWeights.Add(hiddenErrors.MulElem(hiddenOutputs.Apply(regionPW2)).Product(inputs.T()).Scale(net.learningRate))
 }
 
 func (net *Network) Predict(inputData []int64) *Matrix {
@@ -53,11 +51,11 @@ func (net *Network) Predict(inputData []int64) *Matrix {
 
     hiddenInputs := net.hiddenWeights.Product(inputs)
 
-    hiddenOutputs := hiddenInputs.Apply(linearPW)
+    hiddenOutputs := hiddenInputs.Apply(regionPW)
 
     finalInputs := net.outputWeights.Product(hiddenOutputs)
 
-    finalOutputs := finalInputs.Apply(linearPW)
+    finalOutputs := finalInputs.Apply(regionPW)
 
     return finalOutputs
 }
@@ -79,6 +77,63 @@ func linearPW2(r, c int, z int64) int64 {
 		return 0;
 	}
 	return 0x20000000000000;
+}
+
+func regionPW(r, c int, z int64) int64{
+    if z < -(8 << 56) {
+        return 0
+    } else if z > (8 << 56){
+        return (1 << 56)
+    }
+    if z < -(6 << 56) {
+        return Multiply(0x005105DDCEA003, z) + 0x02882EE5F5001D
+    }
+    if z < -(4 << 56) {
+        return Multiply(0x01FC5965FC8E58, z) + 0x0C8C241F832A11
+    }
+    if z < -(2 << 56) {
+        return Multiply(0x0CF4AB520DA07E, z) + 0x386D6BCFC772AC
+    }
+    if z <  (2 << 56) {
+        return Multiply(0x30BDF56A29E728, z) + 0x80000000000000
+    }
+    if z <  (4 << 56) {
+        return Multiply(0x0CF4AB520DA07E, z) + 0xC7929430388D53
+    }
+    if z <  (6 << 56) {
+        return Multiply(0x01FC5965FC8E58, z) + 0xF373DBE07CD5EE
+    } else {
+        return Multiply(0x005105DDCEA003, z) + 0xFD77D111A0AFFE
+    }
+}
+
+func regionPW2(r, c int, z int64) int64{
+    if z < -(8 << 56) {
+        return 0
+    } else if z > (8 << 56){
+        return 0
+    }
+    if z < -(6 << 56) {
+        return 0x005105DDCEA003
+    }
+    if z < -(4 << 56) {
+        return 0x01FC5965FC8E58
+    }
+    if z < -(2 << 56) {
+        return 0x0CF4AB520DA07E
+    }
+    if z <  (2 << 56) {
+        return 0x30BDF56A29E728
+    }
+    if z <  (4 << 56) {
+        return 0x0CF4AB520DA07E
+    }
+    if z <  (6 << 56) {
+        return 0x01FC5965FC8E58
+    } else {
+        return 0x005105DDCEA003
+    }
+
 }
 
 func randomArray(size int, v int64) (data []int64) {
