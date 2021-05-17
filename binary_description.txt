@@ -1,3 +1,0 @@
-We will be looking into using a binary neural network.
-
-Take the mnist handwritten digits network and replicate the algorithm 1 from https://arxiv.org/pdf/1603.05279.pdf .

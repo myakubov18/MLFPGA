@@ -2,3 +2,5 @@
 gonn
 *.csv
 mnist
+go.mod
+go.sum

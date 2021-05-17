@@ -1,5 +1,0 @@
-https://github.com/sausheong/gonn
-https://arxiv.org/pdf/2004.03333.pdf
-https://arxiv.org/pdf/1603.05279.pdf
-https://papers.nips.cc/paper/2016/file/d8330f857a17c53d217014ee776bfd50-Paper.pdf
-
