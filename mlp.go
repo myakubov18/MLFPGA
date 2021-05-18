@@ -138,25 +138,39 @@ func (net Network) Predict(inputData []int64) *Matrix {
 }
 
 //REPLACED SIGMOID WITH RELU THIS IS ACTUALLY RELU WE WERE JUST LAZY
-
+//const lookup_table int64
+func lookup(val int64) int64{
+	return 0;
+}
 
 func linearPW(r, c int, z int64) int64{
-	if z < -(4 << 32) {
-		return 0;
-	}else if z > (4 << 32){
-		return (1 << 32);
-	}else{
-		return (0x80000000 + MultiplyFixed(0x20000000,z))
+	if z > (4 << 32){
+		return 0x100000000;
+	}else if z > (2 << 32){
+		return (0xC7929430 + MultiplyFixed(0x0CF4AB52,z))
+	}else if z > 0{
+		return (0x80000000 + MultiplyFixed(0x30BDF56A,z))
+	}else if z > -(2 << 32){
+		return (0x80000000 - MultiplyFixed(0x30BDF56A,z))
+	}else if z > -(4 << 32){
+		return (0x386D6BD0 + MultiplyFixed(0x0CF4AB52,z))
 	}
+	return 0;
 }
 
 func linearPW2(r, c int, z int64) int64 {
 	if z > (4 << 32){
 		return 0;
-	}else if z < -(4 << 32){
-		return 0;
+	}else if z > (2 << 32){
+		return 0x0CF4AB52
+	}else if z > 0{
+		return 0x30BDF56A
+	}else if z > -(2 << 32){
+		return 0x30BDF56A
+	}else if z > -(4 << 32){
+		return 0x0CF4AB52
 	}
-	return 0x20000000;
+	return 0;
 }
 
 func linearPW_prime(m *Matrix) *Matrix{
