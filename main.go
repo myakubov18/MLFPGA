@@ -23,9 +23,9 @@ func main() {
 	// 100 hidden nodes - an arbitrary number
 	// 10 outputs - digits 0 to 9
 	// 1/256 is the learning rate
-	net := CreateNetwork(784, 100, 10, 0x02000000000000);
-
-	mnist := flag.String("mnist", "", "Either train or predict to evaluate neural network");
+	net := CreateNetwork(784, 100, 10, 0x020000000000);
+	
+    mnist := flag.String("mnist", "", "Either train or predict to evaluate neural network");
 	flag.Parse();
 
 	// train or mass predict to determine the effectiveness of the trained network
@@ -49,7 +49,7 @@ func mnistTrain(net *Network) {
 	firstFewWeights := make([][]int64, numWeightsDisplay);
 	//fmt.Println("\n\nHidden Weights: ", net.hiddenWeights.At(0,500), "\n\n");
 	sample := 0;
-	for epochs := 0; epochs < 5; epochs++ {
+	for epochs := 0; epochs < 20; epochs++ {
 		fmt.Printf("Epoch %d\n", epochs)
         testFile, _ := os.Open("mnist_dataset/mnist_train.csv");
 		r := csv.NewReader(bufio.NewReader(testFile));
@@ -64,7 +64,7 @@ func mnistTrain(net *Network) {
 				//inputs[i], _ = strconv.Atoi(record[i]);
 				//BIT SHIFTED HERE
 				inputs[i], _ = strconv.ParseInt(record[i],10,64);
-				inputs[i] = inputs[i] << 48;
+				inputs[i] = inputs[i] << 40;
 				//inputs[i] = (x / 255.0 * 9.99) + 0.01;
 				//inputs[i] = x + 1
 			}
@@ -73,11 +73,11 @@ func mnistTrain(net *Network) {
 			targets := make([]int64, net.outputs);
 			for i := range targets {
 				//targets[i] = 0.01;
-				targets[i] = 1 << 48;
+				targets[i] = 1 << 40;
 
 			}
 			x, _ := strconv.Atoi(record[0]);
-			targets[x] = 255 << 48;
+			targets[x] = 255 << 40;
 			//fmt.Println("Hidden Weights: ", net.hiddenWeights.At(0,500), "\n");
 			//fmt.Println("--------------------------------------");
 			//fmt.Println(targets);
@@ -129,12 +129,12 @@ func mnistPredict(net *Network) {
 		inputs := make([]int64, net.inputs);
 		for i := range inputs {
 			if i == 0 {
-				inputs[i] = 1 << 48;
+				inputs[i] = 1 << 40;
 			}
 			//inputs[i], _ = strconv.Atoi(record[i]);
 			//BIT SHIFTED HERE
 			inputs[i], _ = strconv.ParseInt(record[i],10,64);
-			inputs[i] = inputs[i] << 48;
+			inputs[i] = inputs[i] << 40;
 			//inputs[i] = (x / 255.0 * 9.99) + 0.01;
 		}
 		//fmt.Println("inputs: ", inputs);

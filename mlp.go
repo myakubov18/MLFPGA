@@ -61,77 +61,77 @@ func (net *Network) Predict(inputData []int64) *Matrix {
 }
 
 func linearPW(r, c int, z int64) int64{
-	if z < -(4 << 56) {
+	if z < -(4 << 48) {
 		return 0;
-	}else if z > (4 << 56){
-		return (1 << 56);
+	}else if z > (4 << 48){
+		return (1 << 48);
 	}else{
-		return (0x80000000000000 + Multiply(0x20000000000000,z))
+		return (0x800000000000 + Multiply(0x200000000000,z))
 	}
 }
 
 func linearPW2(r, c int, z int64) int64 {
-	if z > (4 << 56){
+	if z > (4 << 48){
 		return 0;
-	}else if z < -(4 << 56){
+	}else if z < -(4 << 48){
 		return 0;
 	}
-	return 0x20000000000000;
+	return 0x200000000000;
 }
 
 func regionPW(r, c int, z int64) int64{
-    if z < -(8 << 56) {
+    if z < -(8 << 48) {
         return 0
-    } else if z > (8 << 56){
-        return (1 << 56)
+    } else if z > (8 << 48){
+        return (1 << 48)
     }
-    if z < -(6 << 56) {
-        return Multiply(0x005105DDCEA003, z) + 0x02882EE5F5001D
+    if z < -(6 << 48) {
+        return Multiply(0x005105DDCEA0, z) + 0x02882EE5F500
     }
-    if z < -(4 << 56) {
-        return Multiply(0x01FC5965FC8E58, z) + 0x0C8C241F832A11
+    if z < -(4 << 48) {
+        return Multiply(0x01FC5965FC8E, z) + 0x0C8C241F832A
     }
-    if z < -(2 << 56) {
-        return Multiply(0x0CF4AB520DA07E, z) + 0x386D6BCFC772AC
+    if z < -(2 << 48) {
+        return Multiply(0x0CF4AB520DA0, z) + 0x386D6BCFC772
     }
-    if z <  (2 << 56) {
-        return Multiply(0x30BDF56A29E728, z) + 0x80000000000000
+    if z <  (2 << 48) {
+        return Multiply(0x30BDF56A29E7, z) + 0x800000000000
     }
-    if z <  (4 << 56) {
-        return Multiply(0x0CF4AB520DA07E, z) + 0xC7929430388D53
+    if z <  (4 << 48) {
+        return Multiply(0x0CF4AB520DA0, z) + 0xC7929430388D
     }
-    if z <  (6 << 56) {
-        return Multiply(0x01FC5965FC8E58, z) + 0xF373DBE07CD5EE
+    if z <  (6 << 48) {
+        return Multiply(0x01FC5965FC8E, z) + 0xF373DBE07CD5
     } else {
-        return Multiply(0x005105DDCEA003, z) + 0xFD77D111A0AFFE
+        return Multiply(0x005105DDCEA0, z) + 0xFD77D111A0AF
     }
 }
 
 func regionPW2(r, c int, z int64) int64{
-    if z < -(8 << 56) {
+    if z < -(8 << 48) {
         return 0
-    } else if z > (8 << 56){
+    } else if z > (8 << 48){
         return 0
     }
-    if z < -(6 << 56) {
-        return 0x005105DDCEA003
+    if z < -(6 << 48) {
+        return 0x005105DDCEA0
     }
-    if z < -(4 << 56) {
-        return 0x01FC5965FC8E58
+    if z < -(4 << 48) {
+        return 0x01FC5965FC8E
     }
-    if z < -(2 << 56) {
-        return 0x0CF4AB520DA07E
+    if z < -(2 << 48) {
+        return 0x0CF4AB520DA0
     }
-    if z <  (2 << 56) {
-        return 0x30BDF56A29E728
+    if z <  (2 << 48) {
+        return 0x30BDF56A29E7
     }
-    if z <  (4 << 56) {
-        return 0x0CF4AB520DA07E
+    if z <  (4 << 48) {
+        return 0x0CF4AB520DA0
     }
-    if z <  (6 << 56) {
-        return 0x01FC5965FC8E58
+    if z <  (6 << 48) {
+        return 0x01FC5965FC8E
     } else {
-        return 0x005105DDCEA003
+        return 0x005105DDCEA0
     }
 
 }
@@ -139,7 +139,7 @@ func regionPW2(r, c int, z int64) int64{
 func randomArray(size int, v int64) (data []int64) {
 	data = make([]int64, size);
 	for i := 0; i < size; i++ {
-		data[i] = rand.Int63n(0x1 << 56);
+		data[i] = rand.Int63n(0x1 << 48);
 	}
 	return;
 }

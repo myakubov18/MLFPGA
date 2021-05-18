@@ -15,11 +15,11 @@ func printFixed(a int64){
     a = -a
     fmt.Print("-")
   }
-  fmt.Print(a >> 56)
-  br := Reverse64(uint64(a))>>8
+  fmt.Print(a >> 48)
+  br := Reverse64(uint64(a))>>16
   var sum float64 = 0
   var v float64 = 0.5
-  for i:=0; i < 56; i++ {
+  for i:=0; i < 48; i++ {
         if br% 2 == 1{
       sum += v
         }
@@ -41,10 +41,10 @@ func Divide(a, b int64) int64{
         b = -b
         isNegative = !isNegative
     }
-    if(b == (b>>56)<<56){
-        return a / (b>>56)
+    if(b == (b>>48)<<48){
+        return a / (b>>48)
     }
-    res := (a / (b >> 28)) << 28
+    res := (a / (b >> 24)) << 24
     if(isNegative && res >= 0) {
         res = -res
     } else if(!isNegative && res < 0) {
@@ -66,12 +66,12 @@ func Multiply(a, b int64) int64{
     //((A+B) * (C+D) = (A*C) + (C*B) + (A*D) + (B*D)
 
     //A*C
-    al := a >> 56
-    bl := b >> 56
-    res := (al * bl) << 56
+    al := a >> 48
+    bl := b >> 48
+    res := (al * bl) << 48
 
-    ar := a & 0xffffffffffffff
-    br := b & 0xffffffffffffff
+    ar := a & 0xffffffffffff
+    br := b & 0xffffffffffff
 
     //C*B
     res += (bl * ar)
@@ -80,12 +80,15 @@ func Multiply(a, b int64) int64{
     res += (al * br)
 
     //B*D
-    res += ((ar>>28) * (br>> 28))
+    res += ((ar>>24) * (br>> 24))
     if(isNegative && res >= 0) {
         res = -res
     } else if(!isNegative && res < 0) {
         res = -res
     }
+    //overflow detection
+
+
     return res
 }
 
